@@ -1,7 +1,7 @@
 import heroImage from "@/assets/hero-piano.jpg";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Music, Users, Calendar, BookOpen } from "lucide-react";
+import { Music, Users, Calendar, BookOpen, GraduationCap } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ const Index = () => {
           src={heroImage} 
           alt="Grand piano in warm studio light" 
           className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-charcoal/70 via-charcoal/50 to-background" />
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
@@ -24,12 +25,21 @@ const Index = () => {
           <p className="text-ivory/80 text-lg md:text-xl max-w-xl mb-8 animate-fade-in font-light">
             Your complete studio management — students, lessons, progress, and more.
           </p>
-          <Button 
-            onClick={() => navigate('/dashboard')}
-            className="bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold font-semibold text-base px-8 py-6 rounded-full animate-slide-up"
-          >
-            Enter Studio
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 animate-slide-up">
+            <Button 
+              onClick={() => navigate('/dashboard')}
+              className="bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold font-semibold text-base px-8 py-6 rounded-full"
+            >
+              Enter Studio
+            </Button>
+            <Button 
+              onClick={() => navigate('/parent')}
+              variant="outline"
+              className="border-ivory/30 text-ivory hover:bg-ivory/10 font-semibold text-base px-8 py-6 rounded-full"
+            >
+              <GraduationCap size={18} className="mr-2" /> Parent Portal
+            </Button>
+          </div>
         </div>
       </div>
 
