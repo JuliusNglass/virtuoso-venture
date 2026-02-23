@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Clock, XCircle, UserPlus, Inbox } from "lucide-react";
+import { CheckCircle, Clock, XCircle, UserPlus, Inbox, CreditCard } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -53,6 +53,20 @@ const AdminRequests = () => {
     enabled: !!user && role === "admin",
   });
 
+  const { data: pendingPaymentStudents } = useQuery({
+    queryKey: ["pending-payment-students"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("*")
+        .eq("status", "pending_payment")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && role === "admin",
+  });
+
   const updateRequest = useMutation({
     mutationFn: async ({ id, status, adminNote }: { id: string; status: string; adminNote?: string }) => {
       const updates: Record<string, any> = { status, reviewed_at: new Date().toISOString() };
@@ -61,7 +75,7 @@ const AdminRequests = () => {
       const { error } = await supabase.from("lesson_requests").update(updates).eq("id", id);
       if (error) throw error;
 
-      // If accepted, create student record and link to parent
+      // If accepted, create student record with pending_payment status
       if (status === "accepted") {
         const request = requests?.find(r => r.id === id);
         if (request) {
@@ -74,7 +88,7 @@ const AdminRequests = () => {
             level: request.preferred_level,
             lesson_day: request.preferred_day,
             lesson_time: request.preferred_time,
-            status: "active",
+            status: "pending_payment",
           });
           if (studentError) throw studentError;
         }
@@ -108,6 +122,34 @@ const AdminRequests = () => {
     },
   });
 
+  const confirmPayment = useMutation({
+    mutationFn: async (studentId: string) => {
+      const { error } = await supabase.from("students").update({ status: "active" }).eq("id", studentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-payment-students"] });
+      toast({ title: "Payment confirmed", description: "Student is now active." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const revertToWaiting = useMutation({
+    mutationFn: async (studentId: string) => {
+      const { error } = await supabase.from("students").update({ status: "waiting" }).eq("id", studentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-payment-students"] });
+      toast({ title: "Moved to waiting list", description: "Student has been moved to waiting list due to non-payment." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   if (role !== "admin") {
     return (
       <div className="text-center py-20">
@@ -122,6 +164,7 @@ const AdminRequests = () => {
 
   const pending = requests?.filter(r => r.status === "pending") || [];
   const reviewed = requests?.filter(r => r.status !== "pending") || [];
+  const awaitingPayment = pendingPaymentStudents || [];
 
   const RequestCard = ({ request }: { request: LessonRequest }) => {
     const config = statusConfig[request.status] || statusConfig.pending;
@@ -216,13 +259,16 @@ const AdminRequests = () => {
           <UserPlus size={28} /> Lesson Requests
         </h1>
         <p className="text-muted-foreground mt-1">
-          {pending.length} pending · {reviewed.length} reviewed
+          {pending.length} pending · {awaitingPayment.length} awaiting payment · {reviewed.length} reviewed
         </p>
       </div>
 
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
+          <TabsTrigger value="payment">
+            <CreditCard size={14} className="mr-1" /> Awaiting Payment ({awaitingPayment.length})
+          </TabsTrigger>
           <TabsTrigger value="reviewed">Reviewed ({reviewed.length})</TabsTrigger>
         </TabsList>
 
@@ -233,6 +279,57 @@ const AdminRequests = () => {
             </div>
           ) : (
             <p className="text-muted-foreground text-center py-12">No pending requests.</p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="payment" className="mt-4">
+          {awaitingPayment.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {awaitingPayment.map(student => (
+                <Card key={student.id} className="border-border/50">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-medium text-lg">{student.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {student.age ? `Age ${student.age} · ` : ""}{student.level}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium bg-amber-100 text-amber-700">
+                        <CreditCard size={14} /> Awaiting Payment
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
+                      <div><span className="text-muted-foreground">Parent:</span> {student.parent_name || "—"}</div>
+                      <div><span className="text-muted-foreground">Email:</span> {student.parent_email || "—"}</div>
+                      <div><span className="text-muted-foreground">Lesson day:</span> {student.lesson_day || "TBC"}</div>
+                      <div><span className="text-muted-foreground">Lesson time:</span> {student.lesson_time || "TBC"}</div>
+                    </div>
+                    <div className="flex gap-2 pt-3 border-t border-border/50">
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => confirmPayment.mutate(student.id)}
+                        disabled={confirmPayment.isPending}
+                      >
+                        <CheckCircle size={14} className="mr-1" /> Confirm Payment
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                        onClick={() => revertToWaiting.mutate(student.id)}
+                        disabled={revertToWaiting.isPending}
+                      >
+                        <Clock size={14} className="mr-1" /> Move to Waiting
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-12">No students awaiting payment.</p>
           )}
         </TabsContent>
 
