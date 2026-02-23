@@ -27,6 +27,7 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
   const [studentId, setStudentId] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,33 +103,40 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
 
           <div className="space-y-2">
             <Label>File</Label>
-            <div
-              className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-gold transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {file ? (
-                <div className="flex items-center justify-center gap-2">
-                  <FileText size={18} />
-                  <span className="text-sm font-medium">{file.name}</span>
-                  <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); }}>
-                    <X size={14} className="text-muted-foreground" />
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <Upload size={24} className="mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Click to select a file</p>
-                  <p className="text-xs text-muted-foreground mt-1">PDF, images, or documents up to 10MB</p>
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
-                onChange={e => setFile(e.target.files?.[0] || null)}
-              />
+            <div className="flex gap-2 mb-2">
+              <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => fileInputRef.current?.click()}>
+                <Upload size={14} className="mr-1.5" /> Choose File
+              </Button>
+              <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => cameraInputRef.current?.click()}>
+                <Camera size={14} className="mr-1.5" /> Scan / Photo
+              </Button>
             </div>
+            {file ? (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                <FileText size={18} />
+                <span className="text-sm font-medium truncate flex-1">{file.name}</span>
+                <button type="button" onClick={() => setFile(null)}>
+                  <X size={14} className="text-muted-foreground" />
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">PDF, images, or documents up to 10MB</p>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+              onChange={e => setFile(e.target.files?.[0] || null)}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*"
+              capture="environment"
+              onChange={e => setFile(e.target.files?.[0] || null)}
+            />
           </div>
 
           <Button type="submit" className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold" disabled={!file || uploading}>
