@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Clock, XCircle, UserPlus, Inbox, CreditCard } from "lucide-react";
+import { CheckCircle, Clock, XCircle, UserPlus, Inbox, CreditCard, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -17,6 +17,7 @@ type LessonRequest = {
   child_age: number | null;
   parent_name: string | null;
   parent_email: string | null;
+  parent_phone: string | null;
   preferred_level: string;
   preferred_day: string | null;
   preferred_time: string | null;
@@ -25,6 +26,12 @@ type LessonRequest = {
   admin_notes: string | null;
   reviewed_at: string | null;
   created_at: string;
+};
+
+const formatWhatsAppLink = (phone: string | null, message: string) => {
+  if (!phone) return null;
+  const cleaned = phone.replace(/[\s\-()]/g, "").replace(/^0/, "44");
+  return `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`;
 };
 
 const statusConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
@@ -84,6 +91,7 @@ const AdminRequests = () => {
             age: request.child_age,
             parent_name: request.parent_name,
             parent_email: request.parent_email,
+            parent_phone: request.parent_phone,
             parent_user_id: request.parent_user_id,
             level: request.preferred_level,
             lesson_day: request.preferred_day,
@@ -103,6 +111,7 @@ const AdminRequests = () => {
             age: request.child_age,
             parent_name: request.parent_name,
             parent_email: request.parent_email,
+            parent_phone: request.parent_phone,
             parent_user_id: request.parent_user_id,
             level: request.preferred_level,
             lesson_day: request.preferred_day,
@@ -188,9 +197,21 @@ const AdminRequests = () => {
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
             <div><span className="text-muted-foreground">Parent:</span> {request.parent_name || "—"}</div>
             <div><span className="text-muted-foreground">Email:</span> {request.parent_email || "—"}</div>
+            <div><span className="text-muted-foreground">Phone:</span> {request.parent_phone || "—"}</div>
             <div><span className="text-muted-foreground">Preferred day:</span> {request.preferred_day || "Flexible"}</div>
             <div><span className="text-muted-foreground">Preferred time:</span> {request.preferred_time || "Flexible"}</div>
           </div>
+
+          {request.parent_phone && (
+            <a
+              href={formatWhatsAppLink(request.parent_phone, `Hi ${request.parent_name || "there"}, this is regarding ${request.child_name}'s piano lesson request with Shanika Music Academy.`)!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors mb-3"
+            >
+              <MessageCircle size={14} /> Message on WhatsApp
+            </a>
+          )}
 
           {request.notes && (
             <div className="text-sm bg-muted/50 rounded-lg p-3 mb-3">
@@ -302,9 +323,20 @@ const AdminRequests = () => {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
                       <div><span className="text-muted-foreground">Parent:</span> {student.parent_name || "—"}</div>
                       <div><span className="text-muted-foreground">Email:</span> {student.parent_email || "—"}</div>
+                      <div><span className="text-muted-foreground">Phone:</span> {student.parent_phone || "—"}</div>
                       <div><span className="text-muted-foreground">Lesson day:</span> {student.lesson_day || "TBC"}</div>
                       <div><span className="text-muted-foreground">Lesson time:</span> {student.lesson_time || "TBC"}</div>
                     </div>
+                    {student.parent_phone && (
+                      <a
+                        href={formatWhatsAppLink(student.parent_phone, `Hi ${student.parent_name || "there"}, this is a reminder regarding payment for ${student.name}'s piano lessons with Shanika Music Academy.`)!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors mb-3"
+                      >
+                        <MessageCircle size={14} /> Send Payment Reminder
+                      </a>
+                    )}
                     <div className="flex gap-2 pt-3 border-t border-border/50">
                       <Button
                         size="sm"
