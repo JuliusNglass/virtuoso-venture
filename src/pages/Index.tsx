@@ -35,7 +35,7 @@ const Index = () => {
             <Button 
               onClick={() => navigate('/parent')}
               variant="outline"
-              className="border-ivory/30 text-ivory hover:bg-ivory/10 font-semibold text-base px-8 py-6 rounded-full"
+              className="border-[hsl(var(--ivory))]/30 text-[hsl(var(--ivory))] bg-[hsl(var(--charcoal))]/60 hover:bg-[hsl(var(--ivory))]/10 font-semibold text-base px-8 py-6 rounded-full"
             >
               <GraduationCap size={18} className="mr-2" /> Parent Portal
             </Button>

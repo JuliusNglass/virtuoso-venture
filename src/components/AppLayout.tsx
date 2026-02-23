@@ -12,6 +12,7 @@ const navItems = [
   { path: "/lessons", label: "Lessons", icon: BookOpen },
   { path: "/calendar", label: "Calendar", icon: Calendar },
   { path: "/repertoire", label: "Repertoire", icon: Music },
+  { path: "/files", label: "Files", icon: FileText },
 ];
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
