@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Clock, XCircle, Music, FileText, Download, LogOut, BookOpen } from "lucide-react";
+import { CheckCircle, Clock, XCircle, Music, FileText, Download, LogOut, BookOpen, Send, Inbox } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const attendanceIcon = {
@@ -46,6 +46,16 @@ const ParentPortal = () => {
     enabled: !!user,
   });
 
+  const { data: lessonRequests } = useQuery({
+    queryKey: ["parent-requests", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("lesson_requests").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -81,13 +91,51 @@ const ParentPortal = () => {
             </h1>
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut size={16} className="mr-2" /> Sign Out
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut size={16} className="mr-2" /> Sign Out
+            </Button>
+            <Button size="sm" className="bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold" onClick={() => navigate("/request-lesson")}>
+              <Send size={16} className="mr-2" /> Request Lessons
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto p-6 space-y-8 animate-fade-in">
+        {/* Lesson Requests Status */}
+        {lessonRequests && lessonRequests.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="font-heading text-2xl font-bold flex items-center gap-2">
+              <Inbox size={22} /> Your Requests
+            </h2>
+            <div className="space-y-3">
+              {lessonRequests.map((req) => {
+                const statusStyle: Record<string, string> = {
+                  pending: "bg-amber-100 text-amber-700",
+                  accepted: "bg-green-100 text-green-700",
+                  waitlisted: "bg-blue-100 text-blue-700",
+                  declined: "bg-red-100 text-red-700",
+                };
+                return (
+                  <Card key={req.id} className="border-border/50">
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{req.child_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {req.preferred_level} · Submitted {new Date(req.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
+                        </p>
+                      </div>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${statusStyle[req.status] || "bg-muted text-muted-foreground"}`}>
+                        {req.status}
+                      </span>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        )}
         {/* Children */}
         {students && students.length > 0 ? (
           <>

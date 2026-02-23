@@ -68,6 +68,60 @@ export type Database = {
           },
         ]
       }
+      lesson_requests: {
+        Row: {
+          admin_notes: string | null
+          child_age: number | null
+          child_name: string
+          created_at: string
+          id: string
+          notes: string | null
+          parent_email: string | null
+          parent_name: string | null
+          parent_user_id: string
+          preferred_day: string | null
+          preferred_level: string
+          preferred_time: string | null
+          reviewed_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          child_age?: number | null
+          child_name: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          parent_email?: string | null
+          parent_name?: string | null
+          parent_user_id: string
+          preferred_day?: string | null
+          preferred_level?: string
+          preferred_time?: string | null
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          child_age?: number | null
+          child_name?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          parent_email?: string | null
+          parent_name?: string | null
+          parent_user_id?: string
+          preferred_day?: string | null
+          preferred_level?: string
+          preferred_time?: string | null
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           attendance: string
