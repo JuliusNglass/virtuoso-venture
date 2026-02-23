@@ -1,10 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, Music, Camera, X } from "lucide-react";
+import { Upload, FileText, Music, Camera, X, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,9 +25,47 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
   const [fileType, setFileType] = useState("music_sheet");
   const [studentId, setStudentId] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [showWebcam, setShowWebcam] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
+
+  const startWebcam = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setShowWebcam(true);
+    } catch (err) {
+      toast({ title: "Camera unavailable", description: "Could not access webcam. Check permissions.", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const stopWebcam = useCallback(() => {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setShowWebcam(false);
+  }, []);
+
+  const capturePhoto = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d")?.drawImage(video, 0, 0);
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const captured = new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" });
+        setFile(captured);
+        stopWebcam();
+      }
+    }, "image/jpeg", 0.9);
+  }, [stopWebcam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,9 +145,25 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
                 <Upload size={14} className="mr-1.5" /> Choose File
               </Button>
               <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => cameraInputRef.current?.click()}>
-                <Camera size={14} className="mr-1.5" /> Scan / Photo
+                <Camera size={14} className="mr-1.5" /> Mobile Camera
+              </Button>
+              <Button type="button" variant="outline" size="sm" className="flex-1" onClick={startWebcam}>
+                <Video size={14} className="mr-1.5" /> Webcam
               </Button>
             </div>
+            {showWebcam && (
+              <div className="space-y-2">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg border bg-black aspect-video" />
+                <div className="flex gap-2">
+                  <Button type="button" size="sm" className="flex-1 bg-gradient-gold text-charcoal hover:opacity-90" onClick={capturePhoto}>
+                    <Camera size={14} className="mr-1.5" /> Capture
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={stopWebcam}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
             {file ? (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                 <FileText size={18} />
@@ -119,9 +172,9 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
                   <X size={14} className="text-muted-foreground" />
                 </button>
               </div>
-            ) : (
+            ) : !showWebcam ? (
               <p className="text-xs text-muted-foreground">PDF, images, or documents up to 10MB</p>
-            )}
+            ) : null}
             <input
               ref={fileInputRef}
               type="file"
