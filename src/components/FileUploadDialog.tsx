@@ -140,14 +140,14 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
 
           <div className="space-y-2">
             <Label>File</Label>
-            <div className="flex gap-2 mb-2">
-              <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => fileInputRef.current?.click()}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
+              <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => fileInputRef.current?.click()}>
                 <Upload size={14} className="mr-1.5" /> Choose File
               </Button>
-              <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => cameraInputRef.current?.click()}>
+              <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => cameraInputRef.current?.click()}>
                 <Camera size={14} className="mr-1.5" /> Mobile Camera
               </Button>
-              <Button type="button" variant="outline" size="sm" className="flex-1" onClick={startWebcam}>
+              <Button type="button" variant="outline" size="sm" className="w-full" onClick={startWebcam}>
                 <Video size={14} className="mr-1.5" /> Webcam
               </Button>
             </div>
