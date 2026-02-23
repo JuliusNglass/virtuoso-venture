@@ -205,6 +205,7 @@ export type Database = {
           lesson_day: string | null
           lesson_time: string | null
           level: string
+          meeting_url: string | null
           name: string
           notes: string | null
           parent_email: string | null
@@ -222,6 +223,7 @@ export type Database = {
           lesson_day?: string | null
           lesson_time?: string | null
           level?: string
+          meeting_url?: string | null
           name: string
           notes?: string | null
           parent_email?: string | null
@@ -239,6 +241,7 @@ export type Database = {
           lesson_day?: string | null
           lesson_time?: string | null
           level?: string
+          meeting_url?: string | null
           name?: string
           notes?: string | null
           parent_email?: string | null

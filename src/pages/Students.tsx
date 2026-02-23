@@ -220,6 +220,10 @@ const Students = () => {
                   <Input value={editStudent.lessonTime} onChange={e => setEditStudent({ ...editStudent, lessonTime: e.target.value })} maxLength={20} />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>Meeting URL (Zoom / Google Meet)</Label>
+                <Input value={(editStudent as any).meetingUrl || ""} onChange={e => setEditStudent({ ...editStudent, meetingUrl: e.target.value } as any)} maxLength={500} placeholder="https://zoom.us/j/..." />
+              </div>
               <Button onClick={handleEditSave} className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold">
                 Save Changes
               </Button>
