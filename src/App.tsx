@@ -10,6 +10,7 @@ import Students from "./pages/Students";
 import Lessons from "./pages/Lessons";
 import CalendarPage from "./pages/CalendarPage";
 import Repertoire from "./pages/Repertoire";
+import Files from "./pages/Files";
 import Auth from "./pages/Auth";
 import ParentPortal from "./pages/ParentPortal";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/lessons" element={<AppLayout><Lessons /></AppLayout>} />
             <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
             <Route path="/repertoire" element={<AppLayout><Repertoire /></AppLayout>} />
+            <Route path="/files" element={<AppLayout><Files /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
