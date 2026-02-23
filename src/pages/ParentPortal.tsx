@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, XCircle, Music, FileText, Download, LogOut, BookOpen, Send, Inbox, Video } from "lucide-react";
+import UpcomingLessons from "@/components/UpcomingLessons";
 import { useNavigate } from "react-router-dom";
 
 const attendanceIcon = {
@@ -154,6 +155,9 @@ const ParentPortal = () => {
             </div>
           </section>
         )}
+        {/* Upcoming Lessons with Calendar Export */}
+        <UpcomingLessons userId={user.id} />
+
         {/* Children */}
         {students && students.length > 0 ? (
           <>
