@@ -78,6 +78,7 @@ export type Database = {
           notes: string | null
           parent_email: string | null
           parent_name: string | null
+          parent_phone: string | null
           parent_user_id: string
           preferred_day: string | null
           preferred_level: string
@@ -95,6 +96,7 @@ export type Database = {
           notes?: string | null
           parent_email?: string | null
           parent_name?: string | null
+          parent_phone?: string | null
           parent_user_id: string
           preferred_day?: string | null
           preferred_level?: string
@@ -112,6 +114,7 @@ export type Database = {
           notes?: string | null
           parent_email?: string | null
           parent_name?: string | null
+          parent_phone?: string | null
           parent_user_id?: string
           preferred_day?: string | null
           preferred_level?: string
@@ -206,6 +209,7 @@ export type Database = {
           notes: string | null
           parent_email: string | null
           parent_name: string | null
+          parent_phone: string | null
           parent_user_id: string | null
           status: string
           updated_at: string
@@ -222,6 +226,7 @@ export type Database = {
           notes?: string | null
           parent_email?: string | null
           parent_name?: string | null
+          parent_phone?: string | null
           parent_user_id?: string | null
           status?: string
           updated_at?: string
@@ -238,6 +243,7 @@ export type Database = {
           notes?: string | null
           parent_email?: string | null
           parent_name?: string | null
+          parent_phone?: string | null
           parent_user_id?: string | null
           status?: string
           updated_at?: string

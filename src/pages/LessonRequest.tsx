@@ -25,6 +25,7 @@ const LessonRequest = () => {
     child_age: "",
     parent_name: "",
     parent_email: "",
+    parent_phone: "",
     preferred_level: "Grade 1",
     preferred_day: "",
     preferred_time: "",
@@ -58,6 +59,7 @@ const LessonRequest = () => {
       child_age: form.child_age ? parseInt(form.child_age) : null,
       parent_name: form.parent_name.trim(),
       parent_email: form.parent_email.trim(),
+      parent_phone: form.parent_phone.trim() || null,
       preferred_level: form.preferred_level,
       preferred_day: form.preferred_day || null,
       preferred_time: form.preferred_time || null,
@@ -112,7 +114,7 @@ const LessonRequest = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="parent_name">Parent/Guardian Name *</Label>
                   <Input id="parent_name" value={form.parent_name} onChange={e => update("parent_name", e.target.value)} required maxLength={100} placeholder="e.g. Sarah Thompson" />
@@ -120,6 +122,10 @@ const LessonRequest = () => {
                 <div className="space-y-2">
                   <Label htmlFor="parent_email">Contact Email *</Label>
                   <Input id="parent_email" type="email" value={form.parent_email} onChange={e => update("parent_email", e.target.value)} required maxLength={255} placeholder="e.g. sarah@email.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="parent_phone">WhatsApp / Phone</Label>
+                  <Input id="parent_phone" type="tel" value={form.parent_phone} onChange={e => update("parent_phone", e.target.value)} maxLength={20} placeholder="e.g. +44 7700 900000" />
                 </div>
               </div>
 
