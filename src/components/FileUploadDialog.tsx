@@ -46,7 +46,7 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
         name: file.name,
         file_path: filePath,
         file_type: fileType,
-        student_id: studentId || null,
+        student_id: studentId && studentId !== "none" ? studentId : null,
         file_size: file.size,
         mime_type: file.type,
       });
@@ -93,7 +93,7 @@ const FileUploadDialog = ({ students, onUploaded }: FileUploadDialogProps) => {
             <Select value={studentId} onValueChange={setStudentId}>
               <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {students.map(s => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
