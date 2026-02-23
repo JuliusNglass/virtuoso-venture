@@ -117,18 +117,36 @@ const ParentPortal = () => {
                   waitlisted: "bg-blue-100 text-blue-700",
                   declined: "bg-red-100 text-red-700",
                 };
+                const statusLabel: Record<string, string> = {
+                  pending: "Under Review",
+                  accepted: "Accepted — Awaiting Payment",
+                  waitlisted: "Waitlisted",
+                  declined: "Declined",
+                };
                 return (
                   <Card key={req.id} className="border-border/50">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{req.child_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {req.preferred_level} · Submitted {new Date(req.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
-                        </p>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{req.child_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {req.preferred_level} · Submitted {new Date(req.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
+                          </p>
+                        </div>
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusStyle[req.status] || "bg-muted text-muted-foreground"}`}>
+                          {statusLabel[req.status] || req.status}
+                        </span>
                       </div>
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${statusStyle[req.status] || "bg-muted text-muted-foreground"}`}>
-                        {req.status}
-                      </span>
+                      {req.status === "accepted" && (
+                        <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-lg p-2">
+                          Your application has been accepted! Please complete payment to activate your child's lessons. Contact the academy for payment details.
+                        </p>
+                      )}
+                      {req.admin_notes && (
+                        <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-lg p-2">
+                          <span className="font-medium">Note from teacher: </span>{req.admin_notes}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 );
