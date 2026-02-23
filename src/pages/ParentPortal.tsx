@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Clock, XCircle, Music, FileText, Download, LogOut, BookOpen, Send, Inbox } from "lucide-react";
+import { CheckCircle, Clock, XCircle, Music, FileText, Download, LogOut, BookOpen, Send, Inbox, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const attendanceIcon = {
@@ -181,6 +181,13 @@ const ParentPortal = () => {
                       <div className="text-sm text-muted-foreground mt-2">
                         {student.lesson_day} · {student.lesson_time}
                       </div>
+                      {(student as any).meeting_url && (
+                        <a href={(student as any).meeting_url} target="_blank" rel="noopener noreferrer" className="mt-3 block">
+                          <Button size="sm" className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold">
+                            <Video size={14} className="mr-2" /> Join Online Lesson
+                          </Button>
+                        </a>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
