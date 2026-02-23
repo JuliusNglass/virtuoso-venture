@@ -151,13 +151,13 @@ const LessonRequest = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="preferred_time">Preferred Time</Label>
-                  <Input id="preferred_time" value={form.preferred_time} onChange={e => update("preferred_time", e.target.value)} maxLength={20} placeholder="e.g. 3:00 PM" />
+                  <Input id="preferred_time" type="time" value={form.preferred_time} onChange={e => update("preferred_time", e.target.value)} />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes</Label>
-                <Textarea id="notes" value={form.notes} onChange={e => update("notes", e.target.value)} maxLength={500} placeholder="Any previous experience, musical goals, or other information..." rows={3} />
+                <Label htmlFor="notes">What are your goals with the lessons?</Label>
+                <Textarea id="notes" value={form.notes} onChange={e => update("notes", e.target.value)} maxLength={500} placeholder="e.g. Graded exams & certification, playing for fun, building confidence through performance, music theory foundations..." rows={3} />
               </div>
 
               <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold">
