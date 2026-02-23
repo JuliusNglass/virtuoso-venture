@@ -213,7 +213,7 @@ const Dashboard = () => {
                         ? "bg-red-100 text-red-700"
                         : "bg-accent/20 text-accent-foreground"
                     }`}>
-                      {lesson.attendance}
+                      {lesson.attendance === "present" ? "Attended" : lesson.attendance === "absent" ? "Absent" : "Scheduled"}
                     </span>
                   </div>
                 </div>
