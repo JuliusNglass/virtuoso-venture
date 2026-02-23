@@ -1,9 +1,10 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Users, BookOpen, Calendar, Music, 
-  FileText, CreditCard, MessageSquare, Menu, X 
+  FileText, CreditCard, MessageSquare, Menu, X, LogOut, LogIn 
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,7 +16,14 @@ const navItems = [
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -53,9 +61,25 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             );
           })}
         </nav>
+        <div className="p-4 border-t border-sidebar-border mt-auto">
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200 w-full"
+            >
+              <LogOut size={18} /> Sign Out
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200"
+            >
+              <LogIn size={18} /> Sign In
+            </Link>
+          )}
+        </div>
       </aside>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div 
           className="fixed inset-0 z-40 bg-foreground/50 lg:hidden" 

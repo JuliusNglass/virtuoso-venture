@@ -1,5 +1,7 @@
-import { Users, BookOpen, Calendar, TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { Users, BookOpen, Calendar, TrendingUp, Clock, AlertCircle, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import FileUploadDialog from "@/components/FileUploadDialog";
 
 const stats = [
   { label: "Active Students", value: "24", icon: Users, trend: "+3 this term" },
@@ -21,18 +23,36 @@ const upcomingReminders = [
   { text: "New student enquiry — Waiting list #5", type: "info" },
 ];
 
+const dummyStudents = [
+  { id: "a1b2c3d4-0001-0001-0001-000000000001", name: "Emma Thompson" },
+  { id: "a1b2c3d4-0001-0001-0001-000000000002", name: "Oliver Chen" },
+  { id: "a1b2c3d4-0001-0001-0001-000000000003", name: "Sophie Williams" },
+  { id: "a1b2c3d4-0001-0001-0001-000000000004", name: "James Patel" },
+  { id: "a1b2c3d4-0001-0001-0001-000000000005", name: "Amelia Roberts" },
+  { id: "a1b2c3d4-0001-0001-0001-000000000006", name: "Lucas Brown" },
+];
+
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="font-heading text-3xl font-bold">Good morning, Shanika</h1>
-        <p className="text-muted-foreground mt-1">Here's your studio overview for today.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl font-bold">Good morning, Shanika</h1>
+          <p className="text-muted-foreground mt-1">Here's your studio overview for today.</p>
+        </div>
+        <FileUploadDialog students={dummyStudents} />
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map(({ label, value, icon: Icon, trend }) => (
-          <Card key={label} className="border-border/50 shadow-sm hover:shadow-md transition-shadow">
+          <Card key={label} className="border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
+            if (label.includes("Student")) navigate("/students");
+            if (label.includes("Lesson")) navigate("/lessons");
+            if (label.includes("Attendance")) navigate("/calendar");
+          }}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <div>
@@ -57,7 +77,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {recentLessons.map((lesson, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer" onClick={() => navigate("/lessons")}>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gradient-gold flex items-center justify-center text-charcoal text-xs font-bold">
                     {lesson.student.split(' ').map(n => n[0]).join('')}
