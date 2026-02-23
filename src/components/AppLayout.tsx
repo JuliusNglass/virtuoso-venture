@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Users, BookOpen, Calendar, Music, 
-  FileText, CreditCard, MessageSquare, Menu, X, LogOut, LogIn 
+  FileText, UserPlus, Menu, X, LogOut, LogIn 
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ const navItems = [
   { path: "/calendar", label: "Calendar", icon: Calendar },
   { path: "/repertoire", label: "Repertoire", icon: Music },
   { path: "/files", label: "Files", icon: FileText },
+  { path: "/requests", label: "Requests", icon: UserPlus },
 ];
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {

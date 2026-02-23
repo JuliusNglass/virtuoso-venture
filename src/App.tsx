@@ -13,6 +13,8 @@ import Repertoire from "./pages/Repertoire";
 import Files from "./pages/Files";
 import Auth from "./pages/Auth";
 import ParentPortal from "./pages/ParentPortal";
+import LessonRequest from "./pages/LessonRequest";
+import AdminRequests from "./pages/AdminRequests";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/AppLayout";
 
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/parent" element={<ParentPortal />} />
+            <Route path="/request-lesson" element={<LessonRequest />} />
+            <Route path="/requests" element={<AppLayout><AdminRequests /></AppLayout>} />
             <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
             <Route path="/students" element={<AppLayout><Students /></AppLayout>} />
             <Route path="/lessons" element={<AppLayout><Lessons /></AppLayout>} />
