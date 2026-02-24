@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,10 +22,27 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
     if (error) {
+      setIsLoading(false);
       toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    // Fetch user role to determine redirect
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (authUser) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      setIsLoading(false);
+      if (roleData?.role === "parent") {
+        navigate("/parent");
+      } else {
+        navigate("/dashboard");
+      }
     } else {
+      setIsLoading(false);
       navigate("/dashboard");
     }
   };
