@@ -1,39 +1,17 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Filter, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Phone, Mail, Calendar, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import AddStudentDialog from "@/components/AddStudentDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-interface Student {
-  id: number;
-  name: string;
-  age: number;
-  level: string;
-  currentPiece: string;
-  lessonDay: string;
-  lessonTime: string;
-  parentName: string;
-  parentEmail: string;
-  status: "active" | "waiting" | "paused";
-}
-
-const initialStudents: Student[] = [
-  { id: 1, name: "Emma Thompson", age: 12, level: "Grade 5", currentPiece: "Für Elise", lessonDay: "Monday", lessonTime: "10:00 AM", parentName: "Sarah Thompson", parentEmail: "sarah@email.com", status: "active" },
-  { id: 2, name: "Oliver Chen", age: 9, level: "Grade 3", currentPiece: "Prelude in C Major", lessonDay: "Monday", lessonTime: "11:00 AM", parentName: "Li Chen", parentEmail: "li@email.com", status: "active" },
-  { id: 3, name: "Sophie Williams", age: 15, level: "Grade 7", currentPiece: "Clair de Lune", lessonDay: "Tuesday", lessonTime: "2:00 PM", parentName: "Mark Williams", parentEmail: "mark@email.com", status: "active" },
-  { id: 4, name: "James Patel", age: 10, level: "Grade 4", currentPiece: "Nocturne Op.9 No.2", lessonDay: "Tuesday", lessonTime: "3:30 PM", parentName: "Priya Patel", parentEmail: "priya@email.com", status: "active" },
-  { id: 5, name: "Amelia Roberts", age: 7, level: "Grade 1", currentPiece: "Twinkle Twinkle", lessonDay: "Wednesday", lessonTime: "4:00 PM", parentName: "David Roberts", parentEmail: "david@email.com", status: "active" },
-  { id: 6, name: "Lucas Brown", age: 14, level: "Grade 6", currentPiece: "Moonlight Sonata Mvt.1", lessonDay: "Thursday", lessonTime: "5:00 PM", parentName: "Karen Brown", parentEmail: "karen@email.com", status: "active" },
-  { id: 7, name: "Isla Martinez", age: 8, level: "Waiting List", currentPiece: "—", lessonDay: "—", lessonTime: "—", parentName: "Carlos Martinez", parentEmail: "carlos@email.com", status: "waiting" },
-];
 
 const levelColors: Record<string, string> = {
   "Grade 1": "bg-green-100 text-green-700",
@@ -44,135 +22,341 @@ const levelColors: Record<string, string> = {
   "Grade 6": "bg-purple-100 text-purple-700",
   "Grade 7": "bg-amber-100 text-amber-700",
   "Grade 8": "bg-amber-100 text-amber-700",
-  "Waiting List": "bg-muted text-muted-foreground",
 };
 
-const levels = ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8", "Waiting List"];
+const statusColors: Record<string, string> = {
+  active: "text-green-600",
+  waiting: "text-gold",
+  awaiting_payment: "text-destructive",
+};
+
+const levels = ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8"];
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const Students = () => {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
   const [search, setSearch] = useState("");
-  const [editStudent, setEditStudent] = useState<Student | null>(null);
+  const [filterLevel, setFilterLevel] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [editStudent, setEditStudent] = useState<any>(null);
+  const [showAdd, setShowAdd] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const filtered = students.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.level.toLowerCase().includes(search.toLowerCase())
-  );
+  // Form state for adding
+  const [newName, setNewName] = useState("");
+  const [newAge, setNewAge] = useState("");
+  const [newLevel, setNewLevel] = useState("Grade 1");
+  const [newPiece, setNewPiece] = useState("");
+  const [newDay, setNewDay] = useState("Monday");
+  const [newTime, setNewTime] = useState("");
+  const [newParentName, setNewParentName] = useState("");
+  const [newParentEmail, setNewParentEmail] = useState("");
+  const [newParentPhone, setNewParentPhone] = useState("");
+
+  const { data: students, isLoading } = useQuery({
+    queryKey: ["students"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("students").select("*").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (student: any) => {
+      const { error } = await supabase.from("students").insert(student);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast({ title: "Student added" });
+      setShowAdd(false);
+      resetForm();
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (student: any) => {
+      const { error } = await supabase.from("students").update(student).eq("id", student.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast({ title: "Student updated" });
+      setEditStudent(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("students").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast({ title: "Student removed" });
+    },
+  });
+
+  const resetForm = () => {
+    setNewName(""); setNewAge(""); setNewLevel("Grade 1"); setNewPiece("");
+    setNewDay("Monday"); setNewTime(""); setNewParentName(""); setNewParentEmail(""); setNewParentPhone("");
+  };
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    addMutation.mutate({
+      name: newName.trim(),
+      age: parseInt(newAge) || null,
+      level: newLevel,
+      current_piece: newPiece || null,
+      lesson_day: newDay,
+      lesson_time: newTime || null,
+      parent_name: newParentName || null,
+      parent_email: newParentEmail || null,
+      parent_phone: newParentPhone || null,
+      status: "active",
+    });
+  };
+
+  const filtered = (students ?? []).filter(s => {
+    const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
+      (s.parent_email ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (s.parent_phone ?? "").includes(search);
+    const matchLevel = filterLevel === "all" || s.level === filterLevel;
+    const matchStatus = filterStatus === "all" || s.status === filterStatus;
+    return matchSearch && matchLevel && matchStatus;
+  });
 
   const active = filtered.filter(s => s.status === "active");
-  const waiting = filtered.filter(s => s.status === "waiting");
-
-  const handleAdd = (student: Student) => {
-    setStudents(prev => [...prev, student]);
-  };
-
-  const handleDelete = (id: number) => {
-    const student = students.find(s => s.id === id);
-    setStudents(prev => prev.filter(s => s.id !== id));
-    toast({ title: "Student removed", description: `${student?.name} has been removed.` });
-  };
-
-  const handleEditSave = () => {
-    if (!editStudent) return;
-    setStudents(prev => prev.map(s => s.id === editStudent.id ? editStudent : s));
-    toast({ title: "Student updated", description: `${editStudent.name} has been updated.` });
-    setEditStudent(null);
-  };
+  const waiting = (students ?? []).filter(s => s.status === "waiting");
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold">Students</h1>
-          <p className="text-muted-foreground mt-1">{students.filter(s => s.status === 'active').length} active · {students.filter(s => s.status === 'waiting').length} on waiting list</p>
+          <h1 className="font-heading text-3xl font-bold">Student Management</h1>
+          <p className="text-muted-foreground mt-1">Manage your student roster, waiting list, and enrollment processes</p>
         </div>
-        <AddStudentDialog onAdd={handleAdd} nextId={Math.max(...students.map(s => s.id)) + 1} />
+        <Button onClick={() => setShowAdd(true)} className="bg-primary text-primary-foreground hover:opacity-90 font-medium">
+          <UserPlus size={18} className="mr-2" /> Add New Student
+        </Button>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search students or levels..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-      </div>
+      {/* Search & Filters */}
+      <Card className="border-border/50">
+        <CardContent className="p-4 space-y-3">
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search students by name, email, or phone..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Select value={filterLevel} onValueChange={setFilterLevel}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="All Skill Levels" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Skill Levels</SelectItem>
+                {levels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="All Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="waiting">Waiting</SelectItem>
+                <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {active.map((student) => (
-          <Card key={student.id} className="border-border/50 hover:shadow-md transition-all group">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-gradient-gold flex items-center justify-center text-charcoal font-bold text-sm">
-                    {student.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <p className="font-medium group-hover:text-gold transition-colors">{student.name}</p>
-                    <p className="text-xs text-muted-foreground">Age {student.age}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${levelColors[student.level] || 'bg-muted text-muted-foreground'}`}>
-                    {student.level}
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Current piece</span>
-                  <span className="font-medium">{student.currentPiece}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lesson</span>
-                  <span>{student.lessonDay} · {student.lessonTime}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Parent</span>
-                  <span>{student.parentName}</span>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
-                <Button variant="ghost" size="sm" className="flex-1" onClick={() => setEditStudent(student)}>
-                  <Edit size={14} className="mr-1" /> Edit
-                </Button>
-                <Button variant="ghost" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={() => handleDelete(student.id)}>
-                  <Trash2 size={14} className="mr-1" /> Remove
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {waiting.length > 0 && (
-        <div>
-          <h2 className="font-heading text-xl font-semibold mb-4">Waiting List</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {waiting.map((student) => (
-              <Card key={student.id} className="border-dashed border-border/50">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold text-sm">
-                      {student.name.split(' ').map(n => n[0]).join('')}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Student Directory */}
+        <div className="lg:col-span-3">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-xl font-semibold">Student Directory</h2>
+            <span className="text-sm text-muted-foreground">{active.length} students</span>
+          </div>
+          
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filtered.filter(s => s.status !== "waiting").map((student) => (
+                <Card key={student.id} className="border-border/50 hover:shadow-md transition-all group">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 rounded-full bg-gradient-gold flex items-center justify-center text-charcoal font-bold text-sm">
+                            {student.name.split(' ').map((n: string) => n[0]).join('')}
+                          </div>
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${student.status === 'active' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                        </div>
+                        <div>
+                          <p className="font-medium group-hover:text-gold transition-colors truncate max-w-[120px]">{student.name}</p>
+                          <span className={`text-xs font-medium ${statusColors[student.status] ?? "text-muted-foreground"}`}>
+                            {student.status}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${levelColors[student.level] || 'bg-muted text-muted-foreground'}`}>
+                        {student.level}
+                      </span>
                     </div>
-                    <div>
-                      <p className="font-medium">{student.name}</p>
-                      <p className="text-xs text-muted-foreground">Age {student.age} · Parent: {student.parentName}</p>
+
+                    <div className="space-y-1.5 text-xs text-muted-foreground">
+                      {student.lesson_day && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={12} /> {student.lesson_day} · {student.lesson_time}
+                        </div>
+                      )}
                     </div>
+
+                    {student.current_piece && (
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-muted-foreground">Current Piece</span>
+                        </div>
+                        <p className="text-xs font-medium truncate">{student.current_piece}</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
+                      <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs" onClick={() => setEditStudent(student)}>
+                        <Edit size={12} className="mr-1" /> Edit
+                      </Button>
+                      <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs text-destructive hover:text-destructive" onClick={() => deleteMutation.mutate(student.id)}>
+                        <Trash2 size={12} className="mr-1" /> Remove
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Waiting List Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-xl font-semibold">Waiting List</h2>
+            <span className="text-sm text-gold font-medium">{waiting.length}</span>
+          </div>
+          <div className="space-y-3">
+            {waiting.length > 0 ? waiting.map((student) => (
+              <Card key={student.id} className="border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium text-sm">{student.name}</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${levelColors[student.level] || 'bg-muted text-muted-foreground'}`}>
+                      {student.level}
+                    </span>
                   </div>
-                  <div className="flex gap-2 pt-3 border-t border-border/50">
-                    <Button variant="ghost" size="sm" className="flex-1" onClick={() => setEditStudent(student)}>
-                      <Edit size={14} className="mr-1" /> Edit
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    {student.parent_email && (
+                      <div className="flex items-center gap-1.5">
+                        <Mail size={11} /> {student.parent_email}
+                      </div>
+                    )}
+                    {student.parent_phone && (
+                      <div className="flex items-center gap-1.5">
+                        <Phone size={11} /> {student.parent_phone}
+                      </div>
+                    )}
+                    {student.lesson_day && (
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={11} /> {student.lesson_day}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button variant="ghost" size="sm" className="flex-1 h-7 text-xs" onClick={() => setEditStudent(student)}>
+                      Contact
                     </Button>
-                    <Button variant="ghost" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={() => handleDelete(student.id)}>
-                      <Trash2 size={14} className="mr-1" /> Remove
+                    <Button 
+                      size="sm" 
+                      className="flex-1 h-7 text-xs bg-primary text-primary-foreground"
+                      onClick={() => updateMutation.mutate({ id: student.id, status: "active" })}
+                    >
+                      <UserPlus size={12} className="mr-1" /> Enroll
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No students on waiting list</p>
+            )}
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Add Student Dialog */}
+      <Dialog open={showAdd} onOpenChange={setShowAdd}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Add New Student</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAdd} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input value={newName} onChange={e => setNewName(e.target.value)} required maxLength={100} placeholder="Full name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Age</Label>
+                <Input type="number" value={newAge} onChange={e => setNewAge(e.target.value)} min={3} max={99} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Level</Label>
+              <Select value={newLevel} onValueChange={setNewLevel}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {levels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Current Piece</Label>
+              <Input value={newPiece} onChange={e => setNewPiece(e.target.value)} maxLength={200} placeholder="e.g. Für Elise" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Lesson Day</Label>
+                <Select value={newDay} onValueChange={setNewDay}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Lesson Time</Label>
+                <Input value={newTime} onChange={e => setNewTime(e.target.value)} maxLength={20} placeholder="e.g. 10:00 AM" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Parent Name</Label>
+                <Input value={newParentName} onChange={e => setNewParentName(e.target.value)} maxLength={100} />
+              </div>
+              <div className="space-y-2">
+                <Label>Parent Email</Label>
+                <Input type="email" value={newParentEmail} onChange={e => setNewParentEmail(e.target.value)} maxLength={255} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Parent Phone</Label>
+              <Input value={newParentPhone} onChange={e => setNewParentPhone(e.target.value)} maxLength={20} placeholder="(555) 123-4567" />
+            </div>
+            <Button type="submit" className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold" disabled={addMutation.isPending}>
+              {addMutation.isPending ? "Adding..." : "Add Student"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={!!editStudent} onOpenChange={() => setEditStudent(null)}>
@@ -189,7 +373,7 @@ const Students = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Age</Label>
-                  <Input type="number" value={editStudent.age} onChange={e => setEditStudent({ ...editStudent, age: parseInt(e.target.value) || 0 })} />
+                  <Input type="number" value={editStudent.age ?? ""} onChange={e => setEditStudent({ ...editStudent, age: parseInt(e.target.value) || null })} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -203,12 +387,12 @@ const Students = () => {
               </div>
               <div className="space-y-2">
                 <Label>Current Piece</Label>
-                <Input value={editStudent.currentPiece} onChange={e => setEditStudent({ ...editStudent, currentPiece: e.target.value })} maxLength={200} />
+                <Input value={editStudent.current_piece ?? ""} onChange={e => setEditStudent({ ...editStudent, current_piece: e.target.value })} maxLength={200} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Lesson Day</Label>
-                  <Select value={editStudent.lessonDay} onValueChange={v => setEditStudent({ ...editStudent, lessonDay: v })}>
+                  <Select value={editStudent.lesson_day ?? ""} onValueChange={v => setEditStudent({ ...editStudent, lesson_day: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -217,14 +401,25 @@ const Students = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Lesson Time</Label>
-                  <Input value={editStudent.lessonTime} onChange={e => setEditStudent({ ...editStudent, lessonTime: e.target.value })} maxLength={20} />
+                  <Input value={editStudent.lesson_time ?? ""} onChange={e => setEditStudent({ ...editStudent, lesson_time: e.target.value })} maxLength={20} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Meeting URL (Zoom / Google Meet)</Label>
-                <Input value={(editStudent as any).meetingUrl || ""} onChange={e => setEditStudent({ ...editStudent, meetingUrl: e.target.value } as any)} maxLength={500} placeholder="https://zoom.us/j/..." />
+                <Label>Status</Label>
+                <Select value={editStudent.status} onValueChange={v => setEditStudent({ ...editStudent, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="waiting">Waiting</SelectItem>
+                    <SelectItem value="awaiting_payment">Awaiting Payment</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Button onClick={handleEditSave} className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold">
+              <Button 
+                onClick={() => updateMutation.mutate(editStudent)} 
+                className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold"
+                disabled={updateMutation.isPending}
+              >
                 Save Changes
               </Button>
             </div>
