@@ -11,7 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId = 'JBFqnCBsd6RMkjVDRZzb' } = await req.json();
+    // Alice - Xb7hH8MSUJpSbSDYk0k2 — warm, natural British female voice
+    const { text, voiceId = 'Xb7hH8MSUJpSbSDYk0k2' } = await req.json();
 
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     if (!ELEVENLABS_API_KEY) {
@@ -31,11 +32,11 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text,
-          model_id: 'eleven_turbo_v2_5',
+          model_id: 'eleven_multilingual_v2',
           voice_settings: {
-            stability: 0.55,
-            similarity_boost: 0.75,
-            style: 0.2,
+            stability: 0.45,
+            similarity_boost: 0.80,
+            style: 0.35,
             use_speaker_boost: true,
             speed: 0.95,
           },
