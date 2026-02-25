@@ -55,7 +55,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 <Music size={16} className="text-charcoal" />
               </div>
               <span className="font-heading text-lg font-bold hidden sm:block">
-                {studio?.name ?? "StudioDesk"}
+                {studio?.name ?? "StudioFlow"}
               </span>
             </Link>
 

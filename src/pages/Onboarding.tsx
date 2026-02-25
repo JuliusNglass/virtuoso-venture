@@ -80,7 +80,7 @@ const Onboarding = () => {
           <div className="w-16 h-16 rounded-2xl bg-gradient-gold flex items-center justify-center mx-auto mb-4">
             <Music size={28} className="text-charcoal" />
           </div>
-          <h1 className="font-heading text-2xl font-bold">Welcome to StudioDesk</h1>
+          <h1 className="font-heading text-2xl font-bold">Welcome to StudioFlow</h1>
           <p className="text-muted-foreground mt-1">Let's set up your studio in 30 seconds.</p>
         </div>
 
@@ -119,14 +119,14 @@ const Onboarding = () => {
                   id="studio-name"
                   value={studioName}
                   onChange={e => setStudioName(e.target.value)}
-                  placeholder="e.g. Sarah's Piano Studio"
+                  placeholder="e.g. Sarah's Music Studio"
                   required
                   maxLength={100}
                   className="text-base"
                   autoFocus
                 />
                 <p className="text-xs text-muted-foreground">
-                  Tip: Use your name + "Piano Studio", "Music Academy", or "Music School"
+                  Tip: Use your name + "Music Studio", "Music Academy", or "School of Music"
                 </p>
               </div>
 

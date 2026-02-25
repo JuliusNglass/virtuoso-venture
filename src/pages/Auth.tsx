@@ -73,7 +73,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="font-heading text-2xl">
-            <span className="text-gradient-gold">Shanika</span> Piano Academy
+            <span className="text-gradient-gold">StudioFlow</span>
           </CardTitle>
           <CardDescription>Sign in to manage your studio</CardDescription>
         </CardHeader>
