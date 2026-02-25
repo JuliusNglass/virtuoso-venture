@@ -116,7 +116,13 @@ const IMSLPSearch = () => {
         toast({ title: "Score imported!", description: `"${edition.label}" has been added to your files.` });
         queryClient.invalidateQueries({ queryKey: ["files"] });
       } else {
-        toast({ title: "Import failed", description: "Could not download this edition.", variant: "destructive" });
+        const reason = res.data?.reason;
+        const desc = reason === "not_a_pdf"
+          ? "IMSLP returned a non-PDF file. Try a different edition."
+          : reason === "download_failed"
+          ? "Could not download the file. IMSLP may require login for this edition."
+          : "Could not download this edition. Try another one.";
+        toast({ title: "Import failed", description: desc, variant: "destructive" });
       }
     } catch (err: any) {
       toast({ title: "Import failed", description: err.message, variant: "destructive" });

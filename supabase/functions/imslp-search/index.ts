@@ -124,18 +124,59 @@ serve(async (req) => {
 
     // Import action: download a specific PDF by URL and save it
     if (action === "import" && fileUrl) {
-      const pdfRes = await fetch(fileUrl, {
-        headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
+      // Step 1: Follow the disclaimer URL to get the redirect location
+      const disclaimerRes = await fetch(fileUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; VirtuosoStudio/1.0)",
+          "Referer": "https://imslp.org/",
+        },
+        redirect: "manual", // Don't auto-follow so we can capture redirect
+      });
+
+      let actualPdfUrl = fileUrl;
+
+      // IMSLP disclaimer redirects to the real file URL
+      if (disclaimerRes.status === 302 || disclaimerRes.status === 301) {
+        const location = disclaimerRes.headers.get("location");
+        if (location) {
+          actualPdfUrl = location.startsWith("http") ? location : `https://imslp.org${location}`;
+        }
+      } else if (disclaimerRes.status === 200) {
+        // May be an HTML page — try to find the redirect in it
+        const html = await disclaimerRes.text();
+        // IMSLP sometimes embeds the download URL in the page
+        const metaRedirect = html.match(/content=["'][^"']*url=([^"']+\.pdf[^"']*)/i);
+        const linkMatch = html.match(/href="([^"]+\.pdf[^"]*)"/i);
+        const imgMatch = html.match(/https?:\/\/[^"'\s]+\.pdf/i);
+        const found = metaRedirect?.[1] || linkMatch?.[1] || imgMatch?.[0];
+        if (found) {
+          actualPdfUrl = found.startsWith("http") ? found : `https://imslp.org${found}`;
+        }
+      }
+
+      // Step 2: Download the actual PDF
+      const pdfRes = await fetch(actualPdfUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; VirtuosoStudio/1.0)",
+          "Referer": "https://imslp.org/",
+        },
         redirect: "follow",
       });
 
       if (!pdfRes.ok) {
-        return new Response(JSON.stringify({ success: false, reason: "download_failed" }), {
+        return new Response(JSON.stringify({ success: false, reason: "download_failed", status: pdfRes.status }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
+
+      // Verify it's actually a PDF (starts with %PDF)
+      if (pdfBytes[0] !== 0x25 || pdfBytes[1] !== 0x50 || pdfBytes[2] !== 0x44 || pdfBytes[3] !== 0x46) {
+        return new Response(JSON.stringify({ success: false, reason: "not_a_pdf" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const safeName = (title || "score").replace(/[^a-zA-Z0-9_\-\s]/g, "").trim();
       const filePath = `music_sheet/${Date.now()}-${safeName}.pdf`;
 
