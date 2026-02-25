@@ -17,6 +17,7 @@ import LessonRequest from "./pages/LessonRequest";
 import AdminRequests from "./pages/AdminRequests";
 import NotFound from "./pages/NotFound";
 import AppLayout from "./components/AppLayout";
+import VersionChecker from "./components/VersionChecker";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <VersionChecker />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
