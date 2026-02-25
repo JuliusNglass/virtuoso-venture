@@ -493,22 +493,29 @@ function useVideoExport(cardRef: React.RefObject<HTMLDivElement>) {
   const [exportProgress, setExportProgress] = useState(0); // 0-100
   const [exportStep, setExportStep] = useState("");
 
-  const fetchAudioBlob = async (slideIndex: number): Promise<Blob> => {
+  const fetchAudioBlob = async (slideIndex: number, retries = 3): Promise<Blob> => {
     const s = SLIDES[slideIndex];
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tour-tts`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ text: s.voiceover }),
+    for (let attempt = 0; attempt < retries; attempt++) {
+      if (attempt > 0) {
+        // Exponential backoff: 2s, 4s
+        await new Promise(r => setTimeout(r, 2000 * attempt));
       }
-    );
-    if (!response.ok) throw new Error(`TTS fetch failed for slide ${slideIndex + 1}`);
-    return response.blob();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tour-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: s.voiceover }),
+        }
+      );
+      if (response.ok) return response.blob();
+      console.warn(`TTS attempt ${attempt + 1} failed for slide ${slideIndex + 1}, status: ${response.status}`);
+    }
+    throw new Error(`TTS fetch failed for slide ${slideIndex + 1} after ${retries} attempts`);
   };
 
   const getAudioDuration = (blob: Blob): Promise<number> => {
@@ -542,6 +549,8 @@ function useVideoExport(cardRef: React.RefObject<HTMLDivElement>) {
         setExportProgress(Math.round((i / SLIDES.length) * 40));
         const blob = await fetchAudioBlob(i);
         audioBlobs.push(blob);
+        // Brief pause between requests to avoid rate limiting
+        if (i < SLIDES.length - 1) await new Promise(r => setTimeout(r, 800));
       }
 
       // Phase 2: Get durations
