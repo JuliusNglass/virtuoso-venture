@@ -196,6 +196,44 @@ export type Database = {
         }
         Relationships: []
       }
+      score_annotations: {
+        Row: {
+          annotations: Json
+          created_at: string
+          created_by: string | null
+          file_id: string
+          id: string
+          page_number: number
+          updated_at: string
+        }
+        Insert: {
+          annotations?: Json
+          created_at?: string
+          created_by?: string | null
+          file_id: string
+          id?: string
+          page_number?: number
+          updated_at?: string
+        }
+        Update: {
+          annotations?: Json
+          created_at?: string
+          created_by?: string | null
+          file_id?: string
+          id?: string
+          page_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "score_annotations_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           age: number | null
