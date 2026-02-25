@@ -763,27 +763,69 @@ function useAppDemoRecorder() {
     setRunning(true);
     setProgress(0);
 
+    // Output canvas at 2× for sharper renders, then downscale on draw
+    const W = 1280;
+    const H = 720;
+    const SCALE = 2; // html2canvas render scale
+
     try {
-      const W = 1280;
-      const H = 720;
       const canvas = document.createElement("canvas");
       canvas.width = W;
       canvas.height = H;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d", { alpha: false })!;
 
+      // High-bitrate VP9 stream for quality
+      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+        ? "video/webm;codecs=vp9"
+        : "video/webm";
       const chunks: BlobPart[] = [];
       const stream = canvas.captureStream(30);
       const recorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-          ? "video/webm;codecs=vp9"
-          : "video/webm",
+        mimeType,
+        videoBitsPerSecond: 8_000_000, // 8 Mbps for high quality
       });
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.start(100);
 
-      // Open each page in a hidden iframe, capture with html2canvas
+      // Render a "loading" transition frame onto canvas
+      const drawTransition = (label: string) => {
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 36px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label, W / 2, H / 2 - 10);
+        ctx.font = "18px system-ui, sans-serif";
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText("StudioFlow", W / 2, H / 2 + 30);
+      };
+
+      // Draw snapshot onto canvas, filling the frame
+      const drawSnap = (snap: HTMLCanvasElement) => {
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(0, 0, W, H);
+        // snap was rendered at SCALE×, so actual content is snap.width/SCALE
+        const srcW = snap.width;
+        const srcH = snap.height;
+        const fitScale = Math.min(W / (srcW / SCALE), H / (srcH / SCALE));
+        const dw = (srcW / SCALE) * fitScale;
+        const dh = (srcH / SCALE) * fitScale;
+        const dx = (W - dw) / 2;
+        const dy = (H - dh) / 2;
+        ctx.drawImage(snap, 0, 0, srcW, srcH, dx, dy, dw, dh);
+      };
+
+      // Create a visible, same-origin iframe for reliable html2canvas capture
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:1280px;height:720px;border:none;`;
+      iframe.style.cssText = `
+        position: fixed;
+        top: 0; left: 0;
+        width: ${W}px; height: ${H}px;
+        border: none;
+        z-index: -1;
+        opacity: 0;
+        pointer-events: none;
+      `;
       document.body.appendChild(iframe);
 
       for (let i = 0; i < APP_PAGES.length; i++) {
@@ -791,45 +833,44 @@ function useAppDemoRecorder() {
         setStep(`Capturing ${page.label} (${i + 1}/${APP_PAGES.length})…`);
         setProgress(Math.round((i / APP_PAGES.length) * 80));
 
-        // Navigate iframe
+        // Show transition frame for 0.8s
+        drawTransition(page.label);
+        await new Promise(r => setTimeout(r, 800));
+
+        // Navigate iframe to the real app page
         await new Promise<void>((resolve) => {
-          iframe.onload = () => resolve();
-          iframe.src = page.path;
-          setTimeout(resolve, 4000); // max 4s wait
+          const timer = setTimeout(resolve, 5000);
+          iframe.onload = () => { clearTimeout(timer); resolve(); };
+          iframe.src = window.location.origin + page.path;
         });
 
-        // Extra settle time for JS render
-        await new Promise(r => setTimeout(r, 1500));
+        // Wait for JS components to render (React hydration + data fetch)
+        await new Promise(r => setTimeout(r, 2500));
 
-        // Capture the iframe's document
+        // Capture at 2× scale for crisp output
         let snap: HTMLCanvasElement | null = null;
         try {
           snap = await html2canvas(iframe.contentDocument!.body, {
-            scale: 1,
+            scale: SCALE,
             useCORS: true,
+            allowTaint: false,
             backgroundColor: "#ffffff",
             logging: false,
-            width: 1280,
-            height: 720,
+            width: W,
+            height: H,
+            windowWidth: W,
+            windowHeight: H,
+            scrollX: 0,
+            scrollY: 0,
+            imageTimeout: 8000,
           });
-        } catch {
-          // Fallback: render a label card
-          ctx.fillStyle = "#f5f5f0";
-          ctx.fillRect(0, 0, W, H);
-          ctx.fillStyle = "#1a1a2e";
-          ctx.font = "bold 48px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(page.label, W / 2, H / 2);
+        } catch (e) {
+          console.warn("html2canvas failed for", page.label, e);
+          drawTransition(page.label);
         }
 
         if (snap) {
-          // Draw snapshot, scaled to canvas
-          const scale = Math.min(W / snap.width, H / snap.height);
-          const sw = snap.width * scale;
-          const sh = snap.height * scale;
-          ctx.fillStyle = "#f5f5f0";
-          ctx.fillRect(0, 0, W, H);
-          ctx.drawImage(snap, (W - sw) / 2, (H - sh) / 2, sw, sh);
+          drawSnap(snap);
         }
 
         // Hold this frame for 3 seconds
