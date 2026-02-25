@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,17 +18,55 @@ const IMSLPSearch = () => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<IMSLPResult[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
   const [importing, setImporting] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  // Debounced opensearch for suggestions
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (q.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const res = await supabase.functions.invoke("imslp-search", {
+        body: { action: "suggest", query: q },
+      });
+      if (res.data?.suggestions) {
+        setSuggestions(res.data.suggestions);
+        setShowSuggestions(true);
+      }
+    } catch {
+      // silently fail suggestions
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => fetchSuggestions(query.trim()), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query, fetchSuggestions]);
+
+  const handleSearch = async (searchQuery?: string) => {
+    const q = searchQuery || query;
+    if (!q.trim()) return;
+    setQuery(q);
+    setShowSuggestions(false);
+    setSuggestions([]);
     setSearching(true);
     try {
       const res = await supabase.functions.invoke("imslp-search", {
-        body: { query: query.trim() },
+        body: { query: q.trim() },
       });
       if (res.error) throw res.error;
       setResults(res.data?.results ?? []);
@@ -83,20 +121,44 @@ const IMSLPSearch = () => {
           </p>
         </DialogHeader>
 
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search by composer, title, or work..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-9"
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
+        <div className="relative">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={inputRef}
+                placeholder="Search by composer, title, or work..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-9"
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                autoComplete="off"
+              />
+            </div>
+            <Button onClick={() => handleSearch()} disabled={searching || !query.trim()}>
+              {searching ? <Loader2 size={16} className="animate-spin" /> : "Search"}
+            </Button>
           </div>
-          <Button onClick={handleSearch} disabled={searching || !query.trim()}>
-            {searching ? <Loader2 size={16} className="animate-spin" /> : "Search"}
-          </Button>
+
+          {/* Suggestions dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute z-50 top-full left-0 right-12 mt-1 bg-popover border rounded-lg shadow-lg overflow-hidden">
+              {suggestions.map((s, i) => (
+                <button
+                  key={i}
+                  className="w-full text-left px-4 py-2.5 text-sm hover:bg-accent/50 transition-colors flex items-center gap-2 border-b border-border/30 last:border-0"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSearch(s);
+                  }}
+                >
+                  <Music size={14} className="text-muted-foreground shrink-0" />
+                  <span className="truncate">{s}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-3 mt-2">
