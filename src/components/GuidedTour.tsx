@@ -48,8 +48,10 @@ function MeetStudioFlowVisual() {
   return (
     <div className="space-y-3">
       <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 text-center">
-        <div className="text-4xl mb-2">🎹</div>
-        <p className="text-xl font-bold text-primary">StudioFlow</p>
+        <div className="flex justify-center mb-2">
+          <img src="/conservo-logo.png" alt="Conservo" className="w-12 h-12 rounded-xl object-cover" />
+        </div>
+        <p className="text-xl font-bold text-primary">Conservo</p>
         <p className="text-sm text-muted-foreground mt-1">The all-in-one studio management platform</p>
       </div>
       <div className="grid grid-cols-3 gap-2">
@@ -415,9 +417,9 @@ const SLIDES: Slide[] = [
   },
   {
     id: 2,
-    title: "Meet StudioFlow",
+    title: "Meet Conservo",
     subtitle: "The solution you've been waiting for",
-    voiceover: "StudioFlow brings your students, lessons, calendar, files, and parent communication into one place — built specifically for independent music teachers like you.",
+    voiceover: "Conservo brings your students, lessons, calendar, files, and parent communication into one place — built specifically for independent music teachers like you.",
     accent: "from-primary/20 to-primary/5",
     visual: MeetStudioFlowVisual,
   },
@@ -433,7 +435,7 @@ const SLIDES: Slide[] = [
     id: 4,
     title: "Lesson Notes & Homework",
     subtitle: "Log every session in under 60 seconds",
-    voiceover: "Add what you covered, set homework, mark attendance — and StudioFlow automatically notifies the parent. One tap. Done.",
+    voiceover: "Add what you covered, set homework, mark attendance — and Conservo automatically notifies the parent. One tap. Done.",
     accent: "from-amber-500/20 to-amber-500/5",
     visual: LessonNotesVisual,
   },
@@ -481,7 +483,7 @@ const SLIDES: Slide[] = [
     id: 10,
     title: "The Payoff",
     subtitle: "More music. Less admin. Finally.",
-    voiceover: "From chaos to clarity — students, lessons, parents, and files all in one place. You became a teacher because you love music. StudioFlow keeps it that way.",
+    voiceover: "From chaos to clarity — students, lessons, parents, and files all in one place. You became a teacher because you love music. Conservo keeps it that way.",
     accent: "from-primary/20 to-primary/5",
     visual: PayoffVisual,
   },
@@ -661,7 +663,7 @@ function useVideoExport(cardRef: React.RefObject<HTMLDivElement>) {
       const videoBlob = new Blob(chunks, { type: "video/webm" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(videoBlob);
-      a.download = "studioflow-tour.webm";
+      a.download = "conservo-tour.webm";
       a.click();
       setExportProgress(100);
       setExportStep("Done!");
@@ -712,7 +714,7 @@ function useTabCapture() {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "studioflow-screen-recording.webm";
+        a.download = "conservo-screen-recording.webm";
         a.click();
         setRecording(false);
         setStatus("Saved!");
@@ -831,7 +833,7 @@ function useAppDemoRecorder() {
         ctx.fillText(label, W / 2, H / 2 - 10);
         ctx.font = "18px system-ui, sans-serif";
         ctx.fillStyle = "#94a3b8";
-        ctx.fillText("StudioFlow", W / 2, H / 2 + 30);
+        ctx.fillText("Conservo", W / 2, H / 2 + 30);
       };
 
       const drawSnap = (snap: HTMLCanvasElement) => {
@@ -939,7 +941,7 @@ function useAppDemoRecorder() {
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 42px system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("StudioFlow", W / 2, H / 2 - 10);
+      ctx.fillText("Conservo", W / 2, H / 2 - 10);
       ctx.font = "20px system-ui, sans-serif";
       ctx.fillStyle = "#94a3b8";
       ctx.fillText("The all-in-one studio management platform", W / 2, H / 2 + 35);
@@ -954,7 +956,7 @@ function useAppDemoRecorder() {
       const blob = new Blob(chunks, { type: "video/webm" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "studioflow-app-demo.webm";
+      a.download = "conservo-app-demo.webm";
       a.click();
 
       setProgress(100);
@@ -1106,7 +1108,7 @@ export function GuidedTour() {
             <Play className="h-3.5 w-3.5" />
             Guided Tour
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">See exactly what StudioFlow does</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">See exactly what Conservo does</h2>
           <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
             A 2-minute walkthrough of every feature — with AI voiceover. Use the arrows or click any step to jump around.
           </p>
@@ -1147,7 +1149,7 @@ export function GuidedTour() {
             <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
             <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
             <span className="ml-3 flex-1 rounded-md bg-muted/60 px-3 py-1 text-[10px] text-muted-foreground truncate border border-border/40 font-mono">
-              app.studioflow.co/{slide.title.toLowerCase().replace(/\s+/g, '-')}
+              app.conservo.net/{slide.title.toLowerCase().replace(/\s+/g, '-')}
             </span>
             <span className="ml-2 shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
               {current + 1} / {SLIDES.length}
