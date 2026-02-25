@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useStudio } from "@/hooks/useStudio";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -34,6 +35,7 @@ const levels = ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const Students = () => {
+  const { studio } = useStudio();
   const [search, setSearch] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -64,7 +66,10 @@ const Students = () => {
 
   const addMutation = useMutation({
     mutationFn: async (student: any) => {
-      const { error } = await supabase.from("students").insert(student);
+      const { error } = await supabase.from("students").insert({
+        ...student,
+        studio_id: studio?.id ?? null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

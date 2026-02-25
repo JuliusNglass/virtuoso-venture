@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useStudio } from "@/hooks/useStudio";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +33,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { studio } = useStudio();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -53,7 +55,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 <Music size={16} className="text-charcoal" />
               </div>
               <span className="font-heading text-lg font-bold hidden sm:block">
-                Shanika Piano Academy
+                {studio?.name ?? "StudioDesk"}
               </span>
             </Link>
 

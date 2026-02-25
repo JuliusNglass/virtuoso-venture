@@ -27,17 +27,19 @@ const Auth = () => {
       toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
       return;
     }
-    // Fetch user role to determine redirect
+    // Fetch user role + check if they have a studio
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (authUser) {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", authUser.id)
-        .maybeSingle();
+      const [{ data: roleData }, { data: studioData }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", authUser.id).maybeSingle(),
+        supabase.from("studios").select("id").eq("owner_user_id", authUser.id).maybeSingle(),
+      ]);
       setIsLoading(false);
       if (roleData?.role === "parent") {
         navigate("/parent");
+      } else if (!studioData) {
+        // Admin user but no studio yet — go to onboarding
+        navigate("/onboarding");
       } else {
         navigate("/dashboard");
       }
@@ -51,11 +53,18 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     const { error } = await signUp(email, password, fullName);
-    setIsLoading(false);
     if (error) {
+      setIsLoading(false);
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    // Auto-sign-in after signup and redirect to onboarding
+    const { error: signInError } = await signIn(email, password);
+    setIsLoading(false);
+    if (signInError) {
+      toast({ title: "Account created!", description: "Please sign in to continue." });
     } else {
-      toast({ title: "Check your email", description: "We sent you a confirmation link to verify your account." });
+      navigate("/onboarding");
     }
   };
 
