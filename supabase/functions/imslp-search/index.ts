@@ -122,44 +122,33 @@ serve(async (req) => {
       });
     }
 
-    // Import action: download a specific PDF by URL and save it
+    // Import action: resolve the direct CDN URL via MediaWiki imageinfo API, then download
     if (action === "import" && fileUrl) {
-      // Step 1: Follow the disclaimer URL to get the redirect location
-      const disclaimerRes = await fetch(fileUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; VirtuosoStudio/1.0)",
-          "Referer": "https://imslp.org/",
-        },
-        redirect: "manual", // Don't auto-follow so we can capture redirect
+      // Extract the filename from the disclaimer URL
+      // e.g. https://imslp.org/wiki/Special:IMSLPDisclaimerAccept/PMLP150910-SomeFile.pdf
+      const filenamePart = decodeURIComponent(fileUrl.split("Special:IMSLPDisclaimerAccept/").pop() || "");
+
+      // Use MediaWiki imageinfo API to get the direct file URL
+      const imageInfoUrl = `https://imslp.org/api.php?action=query&titles=File:${encodeURIComponent(filenamePart)}&prop=imageinfo&iiprop=url&format=json`;
+      const infoRes = await fetch(imageInfoUrl, {
+        headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
       });
+      const infoData = await infoRes.json();
+      const pages = infoData?.query?.pages || {};
+      const pageData = Object.values(pages)[0] as any;
+      let directUrl: string | null = pageData?.imageinfo?.[0]?.url || null;
+      // Fix protocol-relative URLs
+      if (directUrl && directUrl.startsWith("//")) directUrl = "https:" + directUrl;
 
-      let actualPdfUrl = fileUrl;
-
-      // IMSLP disclaimer redirects to the real file URL
-      if (disclaimerRes.status === 302 || disclaimerRes.status === 301) {
-        const location = disclaimerRes.headers.get("location");
-        if (location) {
-          actualPdfUrl = location.startsWith("http") ? location : `https://imslp.org${location}`;
-        }
-      } else if (disclaimerRes.status === 200) {
-        // May be an HTML page — try to find the redirect in it
-        const html = await disclaimerRes.text();
-        // IMSLP sometimes embeds the download URL in the page
-        const metaRedirect = html.match(/content=["'][^"']*url=([^"']+\.pdf[^"']*)/i);
-        const linkMatch = html.match(/href="([^"]+\.pdf[^"]*)"/i);
-        const imgMatch = html.match(/https?:\/\/[^"'\s]+\.pdf/i);
-        const found = metaRedirect?.[1] || linkMatch?.[1] || imgMatch?.[0];
-        if (found) {
-          actualPdfUrl = found.startsWith("http") ? found : `https://imslp.org${found}`;
-        }
+      if (!directUrl) {
+        return new Response(JSON.stringify({ success: false, reason: "url_not_found" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
-      // Step 2: Download the actual PDF
-      const pdfRes = await fetch(actualPdfUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; VirtuosoStudio/1.0)",
-          "Referer": "https://imslp.org/",
-        },
+      // Download directly from the CDN URL
+      const pdfRes = await fetch(directUrl, {
+        headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
         redirect: "follow",
       });
 
