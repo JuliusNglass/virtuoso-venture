@@ -14,6 +14,19 @@ serve(async (req) => {
   try {
     const { query, action, url, title } = await req.json();
 
+    // Suggest action: fast prefix-based opensearch for autocomplete
+    if (action === "suggest") {
+      const suggestUrl = `https://imslp.org/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=8&namespace=0&format=json`;
+      const res = await fetch(suggestUrl, {
+        headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
+      });
+      const data = await res.json();
+      const suggestions: string[] = data[1] || [];
+      return new Response(JSON.stringify({ suggestions }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Search action: use MediaWiki full-text search + resolve redirects
     if (!action || action === "search") {
       const searchUrl = `https://imslp.org/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=20&srnamespace=0&format=json`;
