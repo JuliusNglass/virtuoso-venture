@@ -26,7 +26,7 @@ const features = [
   { icon: FileText, title: "Sheet music, organised", description: "Upload and store scores so nothing gets lost between lessons. Access from anywhere." },
   { icon: Calendar, title: "Student progress at a glance", description: "Track repertoire and progress over time. See exactly where each student is in their journey." },
   { icon: Bell, title: "Lesson requests, handled", description: "New students come to you already organised. No more back-and-forth emails just to get started." },
-  { icon: Music, title: "Built by a musician, for musicians", description: "Not a tech company. A classically trained teacher who lived these exact problems." },
+  { icon: Music, title: "Built by a musician, for musicians", description: "Not a tech company. A classically trained teacher who lived these exact problems. Works for piano, guitar, violin, voice — any instrument." },
 ];
 
 const painPoints = [
@@ -481,14 +481,14 @@ export default function SalesPage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10 px-6 py-20 text-center">
         <div className="mx-auto max-w-3xl">
           <div className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-            For independent piano teachers
+            For independent music teachers
           </div>
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             Stop drowning in admin.<br />
             <span className="text-primary">Start teaching more.</span>
           </h1>
           <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
-            StudioDesk is the all-in-one studio management tool built by a classically trained musician who got tired of the chaos — and built the tool they always wished existed.
+            StudioFlow is the all-in-one studio management tool built by a classically trained musician who got tired of the chaos — works for piano, guitar, violin, voice, and more.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="px-8 py-6 text-base font-semibold shadow-lg" onClick={() => window.location.href = "/auth"}>
@@ -529,7 +529,7 @@ export default function SalesPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-10 text-center">
             <h2 className="mb-3 text-3xl font-bold">See it in action</h2>
-            <p className="text-muted-foreground">Click through the features below to explore what StudioDesk looks like.</p>
+            <p className="text-muted-foreground">Click through the features below to explore what StudioFlow looks like.</p>
           </div>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             {/* Tab buttons */}
@@ -578,7 +578,7 @@ export default function SalesPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-3xl font-bold">Everything your studio needs, in one place</h2>
-            <p className="text-muted-foreground">StudioDesk handles the admin so you can focus on the lesson.</p>
+            <p className="text-muted-foreground">StudioFlow handles the admin so you can focus on the lesson.</p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map(({ icon: Icon, title, description }) => (
@@ -601,7 +601,7 @@ export default function SalesPage() {
           <blockquote className="text-lg font-medium leading-relaxed">
             "I built this because I was spending my evenings on admin instead of music. After years of teaching, I finally created the tool I always needed — and now I want to make it available to every teacher who feels the same way."
           </blockquote>
-          <p className="mt-4 text-sm text-muted-foreground">— Julius Nglass, classically trained musician & piano teacher</p>
+          <p className="mt-4 text-sm text-muted-foreground">— Julius Nglass, classically trained musician & music teacher</p>
         </div>
       </section>
 
@@ -620,7 +620,7 @@ export default function SalesPage() {
             <div className="rounded-2xl border bg-card p-8 shadow-md sm:p-10">
               <h2 className="mb-2 text-2xl font-bold">Get early access</h2>
               <p className="mb-8 text-muted-foreground">
-                Join the waitlist and be first to know when StudioDesk opens its doors. No spam, ever.
+                Join the waitlist and be first to know when StudioFlow opens its doors. No spam, ever.
               </p>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -663,7 +663,7 @@ export default function SalesPage() {
 
       {/* Footer */}
       <footer className="border-t px-6 py-8 text-center text-sm text-muted-foreground">
-        <p>StudioDesk · Built by a musician, for musicians · Julius Nglass</p>
+        <p>StudioFlow · Built by a musician, for musicians · Julius Nglass</p>
       </footer>
     </div>
   );
