@@ -5,6 +5,7 @@ import {
   TrendingUp, MessageSquare, Globe, DollarSign, GraduationCap,
   MoreHorizontal
 } from "lucide-react";
+import conservoLogo from "@/assets/conservo-logo.png";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
@@ -51,11 +52,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center">
-                <Music size={16} className="text-charcoal" />
-              </div>
+              <img src="/conservo-logo.png" alt="Conservo" className="w-9 h-9 rounded-lg object-cover" />
               <span className="font-heading text-lg font-bold hidden sm:block">
-                {studio?.name ?? "StudioFlow"}
+                {studio?.name ?? "Conservo"}
               </span>
             </Link>
 

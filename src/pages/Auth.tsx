@@ -72,8 +72,11 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-2">
+            <img src="/conservo-logo.png" alt="Conservo" className="w-14 h-14 rounded-xl object-cover" />
+          </div>
           <CardTitle className="font-heading text-2xl">
-            <span className="text-gradient-gold">StudioFlow</span>
+            <span className="text-gradient-gold">Conservo</span>
           </CardTitle>
           <CardDescription>Sign in to manage your studio</CardDescription>
         </CardHeader>

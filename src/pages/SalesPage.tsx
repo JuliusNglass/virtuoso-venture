@@ -481,7 +481,12 @@ export default function SalesPage() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10 px-6 py-20 text-center">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <img src="/conservo-logo.png" alt="Conservo" className="w-20 h-20 rounded-2xl shadow-xl object-cover" />
+          </div>
+          <div className="mb-2 font-heading text-3xl font-bold tracking-tight text-gradient-gold">Conservo</div>
+          <div className="mb-6 inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             For independent music teachers
           </div>
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
@@ -489,7 +494,7 @@ export default function SalesPage() {
             <span className="text-primary">Start teaching more.</span>
           </h1>
           <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
-            StudioFlow is the all-in-one studio management tool built by a classically trained musician who got tired of the chaos — works for piano, guitar, violin, voice, and more.
+            Conservo is the all-in-one studio management tool built by a classically trained musician who got tired of the chaos — works for piano, guitar, violin, voice, and more.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="px-8 py-6 text-base font-semibold shadow-lg" onClick={() => window.location.href = "/auth"}>
@@ -533,7 +538,7 @@ export default function SalesPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-10 text-center">
             <h2 className="mb-3 text-3xl font-bold">See it in action</h2>
-            <p className="text-muted-foreground">Click through the features below to explore what StudioFlow looks like.</p>
+            <p className="text-muted-foreground">Click through the features below to explore what Conservo looks like.</p>
           </div>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             {/* Tab buttons */}
@@ -582,7 +587,7 @@ export default function SalesPage() {
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
             <h2 className="mb-3 text-3xl font-bold">Everything your studio needs, in one place</h2>
-            <p className="text-muted-foreground">StudioFlow handles the admin so you can focus on the lesson.</p>
+            <p className="text-muted-foreground">Conservo handles the admin so you can focus on the lesson.</p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map(({ icon: Icon, title, description }) => (
@@ -624,7 +629,7 @@ export default function SalesPage() {
             <div className="rounded-2xl border bg-card p-8 shadow-md sm:p-10">
               <h2 className="mb-2 text-2xl font-bold">Get early access</h2>
               <p className="mb-8 text-muted-foreground">
-                Join the waitlist and be first to know when StudioFlow opens its doors. No spam, ever.
+                Join the waitlist and be first to know when Conservo opens its doors. No spam, ever.
               </p>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -667,7 +672,7 @@ export default function SalesPage() {
 
       {/* Footer */}
       <footer className="border-t px-6 py-8 text-center text-sm text-muted-foreground">
-        <p>StudioFlow · Built by a musician, for musicians · Julius Nglass</p>
+        <p>Conservo · Built by a musician, for musicians · Julius Nglass</p>
       </footer>
     </div>
   );
