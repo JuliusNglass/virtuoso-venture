@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clock, XCircle, Edit, Trash2, Search, Calendar, AlertCircle, BookOpen } from "lucide-react";
+import PiecesMultiSelect from "@/components/PiecesMultiSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +40,7 @@ const Lessons = () => {
   const [formDuration, setFormDuration] = useState("60");
   const [formAttendance, setFormAttendance] = useState("present");
   const [formNotes, setFormNotes] = useState("");
-  const [formPieces, setFormPieces] = useState("");
+  const [formPieces, setFormPieces] = useState<string[]>([]);
   const [formHomework, setFormHomework] = useState("");
   const [formProgress, setFormProgress] = useState("");
   const [formParentNotes, setFormParentNotes] = useState("");
@@ -109,7 +110,7 @@ const Lessons = () => {
   });
 
   const resetForm = () => {
-    setFormStudent(""); setFormNotes(""); setFormPieces(""); setFormHomework("");
+    setFormStudent(""); setFormNotes(""); setFormPieces([]); setFormHomework("");
     setFormProgress(""); setFormParentNotes(""); setFormAttendance("present");
     setFormDate(format(new Date(), "yyyy-MM-dd")); setFormTime("15:00"); setFormDuration("60");
   };
@@ -122,7 +123,7 @@ const Lessons = () => {
       date: formDate,
       attendance: formAttendance,
       notes: [formNotes, formProgress, formParentNotes].filter(Boolean).join("\n\n"),
-      pieces: formPieces ? formPieces.split(",").map(p => p.trim()).filter(Boolean) : [],
+      pieces: formPieces.length > 0 ? formPieces : [],
       homework: formHomework || null,
     });
   };
@@ -343,7 +344,7 @@ const Lessons = () => {
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">Assigned Pieces</Label>
-                  <Input value={formPieces} onChange={e => setFormPieces(e.target.value)} maxLength={500} placeholder="List pieces assigned during this lesson..." className="h-9 text-sm" />
+                  <PiecesMultiSelect selected={formPieces} onChange={setFormPieces} />
                 </div>
 
                 <div className="space-y-1.5">
@@ -399,8 +400,8 @@ const Lessons = () => {
                 <Textarea value={editLesson.notes ?? ""} onChange={e => setEditLesson({ ...editLesson, notes: e.target.value })} maxLength={1000} rows={3} />
               </div>
               <div className="space-y-2">
-                <Label>Pieces (comma-separated)</Label>
-                <Input value={(editLesson.pieces ?? []).join(", ")} onChange={e => setEditLesson({ ...editLesson, pieces: e.target.value.split(",").map((p: string) => p.trim()).filter(Boolean) })} maxLength={500} />
+                <Label>Assigned Pieces</Label>
+                <PiecesMultiSelect selected={editLesson.pieces ?? []} onChange={pieces => setEditLesson({ ...editLesson, pieces })} />
               </div>
               <div className="space-y-2">
                 <Label>Homework</Label>
