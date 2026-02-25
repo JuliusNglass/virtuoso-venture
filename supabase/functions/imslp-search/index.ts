@@ -77,63 +77,44 @@ serve(async (req) => {
       });
     }
 
-    // Browse action: fetch IMSLP page and return list of available PDF editions
+    // Browse action: use MediaWiki API to get file list from the page
     if (action === "browse" && url) {
-      const pageRes = await fetch(url, {
+      // Extract page title from URL
+      const urlObj = new URL(url.startsWith("http") ? url : "https:" + url);
+      const pageTitle = decodeURIComponent(urlObj.pathname.replace("/wiki/", ""));
+
+      // Use MediaWiki images API to get all File: references on the page
+      const imagesApiUrl = `https://imslp.org/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=images&format=json&imlimit=100`;
+      const imagesRes = await fetch(imagesApiUrl, {
         headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
       });
-      const html = await pageRes.text();
+      const imagesData = await imagesRes.json();
 
-      // Extract all disclaimer-accept PDF links and their nearby labels
+      const pages = imagesData?.query?.pages || {};
+      const pageData = Object.values(pages)[0] as any;
+      const images: any[] = pageData?.images || [];
+
+      // Filter to only PDF files
+      const pdfFiles = images.filter((img: any) =>
+        img.title && img.title.toLowerCase().endsWith(".pdf")
+      );
+
       const editions: { label: string; url: string }[] = [];
-      
-      // Match blocks: find all IMSLPDisclaimerAccept links
-      const pdfPattern = /href="((?:https?:)?\/\/imslp\.org\/wiki\/Special:IMSLPDisclaimerAccept\/[^"]+\.pdf[^"]*)"/gi;
-      const matches = [...html.matchAll(pdfPattern)];
 
-      // Also try to extract surrounding context (arranger/editor names)
-      // We'll look for table rows containing PDF links to grab labels
-      // Simple approach: for each PDF, look backwards ~500 chars for a label pattern
-      const usedUrls = new Set<string>();
+      for (const file of pdfFiles) {
+        // file.title is like "File:PMLP12345-Sullivan_LostChord.pdf"
+        const filename = file.title.replace(/^File:/i, "");
+        const encodedFilename = encodeURIComponent(filename);
+        const disclaimerUrl = `https://imslp.org/wiki/Special:IMSLPDisclaimerAccept/${encodedFilename}`;
 
-      for (const match of matches) {
-        let pdfUrl = match[1];
-        if (pdfUrl.startsWith("//")) pdfUrl = "https:" + pdfUrl;
-        
-        if (usedUrls.has(pdfUrl)) continue;
-        usedUrls.add(pdfUrl);
+        // Make a human-readable label from the filename
+        const label = filename
+          .replace(/\.pdf$/i, "")
+          .replace(/^PMLP\d+-/i, "")
+          .replace(/_/g, " ")
+          .trim() || filename;
 
-        // Try to extract a label from the surrounding HTML (editor/arranger row)
-        const pos = match.index ?? 0;
-        const surrounding = html.substring(Math.max(0, pos - 800), pos + 200);
-        
-        // Look for editor/arranger/title patterns in the surrounding text
-        let label = "";
-        
-        // Try to find "Editor" field
-        const editorMatch = surrounding.match(/Editor\s*<\/[^>]+>\s*<[^>]+>([^<]{3,60})</i);
-        if (editorMatch) label = `Ed. ${editorMatch[1].trim()}`;
-        
-        // Try to find file description label
-        if (!label) {
-          const descMatch = surrounding.match(/title="([^"]{5,80})"\s*(?:class="[^"]*")?[^>]*>\s*(?:PDF|score)/i);
-          if (descMatch) label = descMatch[1].trim();
-        }
-
-        // Try to find arranger
-        if (!label) {
-          const arrangMatch = surrounding.match(/Arranger\s*<\/[^>]+>\s*<[^>]+>([^<]{3,60})</i);
-          if (arrangMatch) label = `Arr. ${arrangMatch[1].trim()}`;
-        }
-
-        // Fallback: extract filename from URL
-        if (!label) {
-          const urlParts = pdfUrl.split("/");
-          const filename = decodeURIComponent(urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2] || "");
-          label = filename.replace(/\.pdf$/i, "").replace(/_/g, " ").substring(0, 80) || `Score ${editions.length + 1}`;
-        }
-
-        editions.push({ label, url: pdfUrl });
+        editions.push({ label, url: disclaimerUrl });
       }
 
       return new Response(JSON.stringify({ editions }), {
