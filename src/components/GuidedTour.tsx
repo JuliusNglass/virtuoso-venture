@@ -492,7 +492,6 @@ export function GuidedTour() {
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [loadingAudio, setLoadingAudio] = useState(false);
-  const [autoAdvance, setAutoAdvance] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCache = useRef<Record<number, string>>({});
@@ -550,14 +549,16 @@ export function GuidedTour() {
 
       audio.onended = () => {
         setPlaying(false);
-        if (autoAdvance && slideIndex < SLIDES.length - 1) {
+        if (slideIndex < SLIDES.length - 1) {
           autoTimer.current = setTimeout(() => {
-            setCurrent(prev => {
-              const next = prev + 1;
+            const next = slideIndex + 1;
+            setTransitioning(true);
+            setTimeout(() => {
+              setCurrent(next);
+              setTransitioning(false);
               fetchAndPlay(next);
-              return next;
-            });
-          }, 800);
+            }, 220);
+          }, 600);
         }
       };
 
@@ -569,7 +570,7 @@ export function GuidedTour() {
     } finally {
       setLoadingAudio(false);
     }
-  }, [muted, autoAdvance]);
+  }, [muted]);
 
   const handlePlayPause = () => {
     if (loadingAudio) return;
@@ -764,13 +765,10 @@ export function GuidedTour() {
           </button>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setAutoAdvance(a => !a)}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all border ${autoAdvance ? "bg-primary/10 text-primary border-primary/30" : "bg-background text-muted-foreground border-border"}`}
-            >
-              <span className={`h-1.5 w-1.5 rounded-full transition-colors ${autoAdvance ? "bg-primary" : "bg-muted-foreground/30"}`} />
-              Auto-play
-            </button>
+            <span className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary border border-primary/30">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Auto-play on
+            </span>
           </div>
 
           {current < SLIDES.length - 1 ? (
