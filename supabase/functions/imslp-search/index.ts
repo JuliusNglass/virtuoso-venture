@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const { query, action, url, title } = await req.json();
 
-    // Search action: use MediaWiki full-text search API (better than opensearch for piece titles)
+    // Search action: use MediaWiki full-text search + resolve redirects
     if (!action || action === "search") {
       const searchUrl = `https://imslp.org/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=20&srnamespace=0&format=json`;
       const res = await fetch(searchUrl, {
@@ -23,11 +23,43 @@ serve(async (req) => {
       const data = await res.json();
 
       const searchResults = data?.query?.search || [];
-      const results = searchResults.map((r: any) => ({
-        title: r.title || "",
-        description: (r.snippet || "").replace(/<[^>]*>/g, ""), // strip HTML tags from snippet
-        url: `https://imslp.org/wiki/${encodeURIComponent((r.title || "").replace(/ /g, "_"))}`,
-      }));
+
+      // Resolve redirects: check which pages are redirects and get their targets
+      const titles = searchResults.map((r: any) => r.title).join("|");
+      let redirectMap: Record<string, string> = {};
+
+      if (titles) {
+        const redirectUrl = `https://imslp.org/api.php?action=query&titles=${encodeURIComponent(titles)}&redirects=1&format=json`;
+        const redirectRes = await fetch(redirectUrl, {
+          headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
+        });
+        const redirectData = await redirectRes.json();
+        const redirects = redirectData?.query?.redirects || [];
+        for (const r of redirects) {
+          redirectMap[r.from] = r.to;
+        }
+      }
+
+      // Deduplicate: track resolved titles to avoid showing duplicates
+      const seen = new Set<string>();
+      const results: any[] = [];
+
+      for (const r of searchResults) {
+        const originalTitle = r.title || "";
+        const resolvedTitle = redirectMap[originalTitle] || originalTitle;
+        
+        if (seen.has(resolvedTitle)) continue;
+        seen.add(resolvedTitle);
+
+        const snippet = (r.snippet || "").replace(/<[^>]*>/g, "");
+        const isRedirect = !!redirectMap[originalTitle];
+        
+        results.push({
+          title: resolvedTitle,
+          description: isRedirect ? `Redirected from: ${originalTitle}. ${snippet}` : snippet,
+          url: `https://imslp.org/wiki/${encodeURIComponent(resolvedTitle.replace(/ /g, "_"))}`,
+        });
+      }
 
       return new Response(JSON.stringify({ results }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
