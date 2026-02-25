@@ -68,6 +68,30 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       lesson_requests: {
         Row: {
           admin_notes: string | null

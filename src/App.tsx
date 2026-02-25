@@ -16,6 +16,7 @@ import ParentPortal from "./pages/ParentPortal";
 import LessonRequest from "./pages/LessonRequest";
 import AdminRequests from "./pages/AdminRequests";
 import NotFound from "./pages/NotFound";
+import SalesPage from "./pages/SalesPage";
 import AppLayout from "./components/AppLayout";
 import VersionChecker from "./components/VersionChecker";
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
             <Route path="/repertoire" element={<AppLayout><Repertoire /></AppLayout>} />
             <Route path="/files" element={<AppLayout><Files /></AppLayout>} />
+            <Route path="/sales" element={<SalesPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
