@@ -9,7 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import {
   CheckCircle2, Music, BookOpen, Users, Calendar, FileText, Bell,
   LayoutDashboard, ClipboardList, UserCircle, FolderOpen, ChevronRight,
-  Clock, Star, TrendingUp, CheckCheck
+  Clock, CheckCheck, TrendingUp, MessageSquare, Download, Search,
+  PenLine, Paperclip, ChevronDown, BarChart2, Award, ArrowUp, Send
 } from "lucide-react";
 
 const leadSchema = z.object({
@@ -39,37 +40,70 @@ const painPoints = [
 // ─── Mockup screens ───────────────────────────────────────────────────────────
 
 function DashboardMockup() {
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const students = [
+    { name: "Sophie T.", time: "3:00 PM", level: "Grade 5", piece: "Für Elise", attendance: 98, lessons: 24 },
+    { name: "Liam K.", time: "4:30 PM", level: "Grade 2", piece: "Minuet in G", attendance: 91, lessons: 12 },
+    { name: "Aria M.", time: "5:30 PM", level: "Grade 7", piece: "Moonlight Sonata", attendance: 100, lessons: 36 },
+    { name: "Noah P.", time: "6:00 PM", level: "Grade 4", piece: "Sonatina Op.36", attendance: 85, lessons: 18 },
+  ];
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2">
+      {/* Stats row */}
+      <div className="grid grid-cols-4 gap-2">
         {[
-          { label: "Active Students", value: "14", icon: Users, color: "text-blue-500" },
-          { label: "Lessons This Week", value: "9", icon: Calendar, color: "text-green-500" },
-          { label: "Pending Homework", value: "6", icon: ClipboardList, color: "text-amber-500" },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="rounded-lg border bg-background p-3 text-center shadow-sm">
-            <Icon className={`mx-auto mb-1 h-4 w-4 ${color}`} />
-            <div className="text-lg font-bold">{value}</div>
-            <div className="text-[10px] text-muted-foreground">{label}</div>
+          { label: "Students", value: "14", sub: "2 new this month", icon: Users, accent: "bg-primary/10 text-primary" },
+          { label: "This Week", value: "9", sub: "lessons scheduled", icon: Calendar, accent: "bg-emerald-500/10 text-emerald-600" },
+          { label: "Avg. Attendance", value: "94%", sub: "↑ 3% vs last month", icon: TrendingUp, accent: "bg-violet-500/10 text-violet-600" },
+          { label: "Homework Set", value: "12", sub: "6 reviewed by parents", icon: CheckCheck, accent: "bg-amber-500/10 text-amber-600" },
+        ].map(({ label, value, sub, icon: Icon, accent }) => (
+          <div key={label} className="rounded-lg border bg-background p-2.5 shadow-sm">
+            <div className={`mb-1.5 inline-flex h-6 w-6 items-center justify-center rounded-md ${accent}`}>
+              <Icon className="h-3 w-3" />
+            </div>
+            <div className="text-base font-bold leading-none">{value}</div>
+            <div className="text-[9px] font-medium text-muted-foreground mt-0.5">{label}</div>
+            <div className="text-[8px] text-muted-foreground/70 mt-0.5">{sub}</div>
           </div>
         ))}
       </div>
-      <div className="rounded-lg border bg-background p-3 shadow-sm">
-        <p className="mb-2 text-xs font-semibold text-muted-foreground">UPCOMING LESSONS TODAY</p>
-        {[
-          { name: "Sophie T.", time: "3:00 PM", level: "Grade 5", piece: "Für Elise" },
-          { name: "Liam K.", time: "4:30 PM", level: "Grade 2", piece: "Minuet in G" },
-          { name: "Aria M.", time: "5:30 PM", level: "Grade 7", piece: "Moonlight Sonata" },
-        ].map((s) => (
-          <div key={s.name} className="flex items-center justify-between border-b py-2 last:border-0">
-            <div>
-              <p className="text-xs font-medium">{s.name}</p>
-              <p className="text-[10px] text-muted-foreground">{s.level} · {s.piece}</p>
+      {/* Today's lessons */}
+      <div className="rounded-lg border bg-background shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2">
+          <p className="text-[10px] font-semibold text-muted-foreground">TODAY'S LESSONS — Wednesday 25 Feb</p>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-medium text-primary">4 lessons</span>
+        </div>
+        {students.map((s) => (
+          <div
+            key={s.name}
+            onClick={() => setSelectedStudent(selectedStudent === s.name ? null : s.name)}
+            className={`cursor-pointer border-b px-3 py-2 last:border-0 transition-colors ${selectedStudent === s.name ? "bg-primary/5" : "hover:bg-muted/30"}`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                  {s.name[0]}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold">{s.name}</p>
+                  <p className="text-[9px] text-muted-foreground">{s.level} · {s.piece}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <p className="text-[10px] font-medium">{s.time}</p>
+                  <p className="text-[9px] text-muted-foreground">{s.attendance}% attendance</p>
+                </div>
+                <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${selectedStudent === s.name ? "rotate-180" : ""}`} />
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[10px] font-medium">{s.time}</span>
-            </div>
+            {selectedStudent === s.name && (
+              <div className="mt-2 flex gap-2 border-t pt-2">
+                <button className="flex-1 rounded bg-primary px-2 py-1 text-[9px] font-medium text-primary-foreground">Log Lesson</button>
+                <button className="flex-1 rounded border px-2 py-1 text-[9px] font-medium">View History ({s.lessons})</button>
+                <button className="flex-1 rounded border px-2 py-1 text-[9px] font-medium">Message Parent</button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -79,121 +113,334 @@ function DashboardMockup() {
 
 function LessonLogMockup() {
   const [saved, setSaved] = useState(false);
+  const [attendance, setAttendance] = useState<"present" | "absent" | "late">("present");
+  const [note, setNote] = useState("Great progress on the left hand in bars 1–8. Work on dynamics in the middle section.");
+  const [homework, setHomework] = useState("Practise bars 9–16 slowly at ♩= 60, 15 mins daily.");
+  const pieces = ["Für Elise", "C Major Scale", "Sight Reading Ex. 4"];
+  const history = [
+    { date: "18 Feb", pieces: "Für Elise (intro)", note: "Introduced piece. Good hand position." },
+    { date: "11 Feb", pieces: "Minuet in G", note: "Completed — moving on next week." },
+  ];
   return (
-    <div className="space-y-3">
-      <div className="rounded-lg border bg-background p-3 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
+    <div className="space-y-2">
+      {/* Student header */}
+      <div className="flex items-center justify-between rounded-lg border bg-background px-3 py-2 shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">S</div>
           <div>
-            <p className="text-xs font-semibold">Sophie T. — Lesson Log</p>
-            <p className="text-[10px] text-muted-foreground">25 Feb 2026 · Grade 5</p>
+            <p className="text-[11px] font-semibold">Sophie T. · Grade 5</p>
+            <p className="text-[9px] text-muted-foreground">25 Feb 2026 · Lesson #25 · 60 min</p>
           </div>
-          <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">Present</span>
         </div>
-        <div className="space-y-2">
-          <div>
-            <p className="mb-1 text-[10px] font-semibold text-muted-foreground">PIECES COVERED</p>
-            <div className="flex flex-wrap gap-1">
-              {["Für Elise", "C Major Scale", "Sight Reading Ex. 4"].map(p => (
-                <span key={p} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] text-primary">{p}</span>
-              ))}
+        <div className="flex gap-1">
+          {(["present", "late", "absent"] as const).map((a) => (
+            <button
+              key={a}
+              onClick={() => setAttendance(a)}
+              className={`rounded px-2 py-0.5 text-[9px] font-medium capitalize transition-colors ${
+                attendance === a
+                  ? a === "present" ? "bg-emerald-500 text-white" : a === "late" ? "bg-amber-500 text-white" : "bg-destructive text-destructive-foreground"
+                  : "border text-muted-foreground"
+              }`}
+            >{a}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Pieces */}
+      <div className="rounded-lg border bg-background p-3 shadow-sm">
+        <p className="mb-1.5 text-[9px] font-semibold uppercase text-muted-foreground">Pieces Covered</p>
+        <div className="flex flex-wrap gap-1">
+          {pieces.map(p => (
+            <span key={p} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">{p}</span>
+          ))}
+          <span className="cursor-pointer rounded-full border border-dashed px-2 py-0.5 text-[10px] text-muted-foreground">+ Add piece</span>
+        </div>
+      </div>
+
+      {/* Notes + Homework */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg border bg-background p-2.5 shadow-sm">
+          <div className="mb-1 flex items-center gap-1">
+            <PenLine className="h-3 w-3 text-muted-foreground" />
+            <p className="text-[9px] font-semibold uppercase text-muted-foreground">Lesson Notes</p>
+          </div>
+          <p className="text-[9px] leading-relaxed text-foreground">{note}</p>
+        </div>
+        <div className="rounded-lg border bg-background p-2.5 shadow-sm">
+          <div className="mb-1 flex items-center gap-1">
+            <Send className="h-3 w-3 text-muted-foreground" />
+            <p className="text-[9px] font-semibold uppercase text-muted-foreground">Homework</p>
+          </div>
+          <p className="text-[9px] leading-relaxed text-foreground">{homework}</p>
+        </div>
+      </div>
+
+      {/* History preview */}
+      <div className="rounded-lg border bg-background p-2.5 shadow-sm">
+        <p className="mb-1.5 text-[9px] font-semibold uppercase text-muted-foreground">Previous Lessons</p>
+        {history.map(h => (
+          <div key={h.date} className="flex items-start gap-2 border-b py-1.5 last:border-0">
+            <span className="mt-0.5 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[8px] font-medium">{h.date}</span>
+            <div>
+              <p className="text-[9px] font-medium">{h.pieces}</p>
+              <p className="text-[8px] text-muted-foreground">{h.note}</p>
             </div>
           </div>
-          <div>
-            <p className="mb-1 text-[10px] font-semibold text-muted-foreground">LESSON NOTES</p>
-            <p className="rounded bg-muted px-2 py-1.5 text-[10px]">Great progress on the left hand in bars 1–8. Work on dynamics in the middle section.</p>
-          </div>
-          <div>
-            <p className="mb-1 text-[10px] font-semibold text-muted-foreground">HOMEWORK</p>
-            <p className="rounded bg-muted px-2 py-1.5 text-[10px]">Practise bars 9–16 slowly with a metronome at ♩= 60. 15 mins daily.</p>
-          </div>
-        </div>
-        <Button
-          size="sm"
-          className="mt-3 w-full text-xs"
-          onClick={() => setSaved(true)}
-        >
-          {saved ? <><CheckCheck className="mr-1 h-3 w-3" /> Saved!</> : "Save Lesson"}
-        </Button>
+        ))}
       </div>
+
+      <Button size="sm" className="w-full text-xs" onClick={() => setSaved(true)}>
+        {saved ? <><CheckCheck className="mr-1 h-3 w-3" /> Saved & Parent Notified!</> : "Save Lesson & Notify Parent"}
+      </Button>
     </div>
   );
 }
 
 function ParentPortalMockup() {
-  return (
-    <div className="space-y-3">
-      <div className="rounded-lg border bg-background p-3 shadow-sm">
-        <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">S</div>
-          <div>
-            <p className="text-xs font-semibold">Sophie's Progress</p>
-            <p className="text-[10px] text-muted-foreground">Parent portal · Live updates</p>
-          </div>
-        </div>
-        <div className="mb-3 grid grid-cols-2 gap-2">
-          <div className="rounded-lg bg-muted p-2 text-center">
-            <p className="text-base font-bold">24</p>
-            <p className="text-[10px] text-muted-foreground">Lessons completed</p>
-          </div>
-          <div className="rounded-lg bg-muted p-2 text-center">
-            <p className="text-base font-bold">Grade 5</p>
-            <p className="text-[10px] text-muted-foreground">Current level</p>
-          </div>
-        </div>
-        <p className="mb-1 text-[10px] font-semibold text-muted-foreground">LAST LESSON</p>
-        <div className="rounded border bg-muted/40 p-2 text-[10px] space-y-1">
-          <p><span className="font-medium">Piece:</span> Für Elise — great progress on left hand</p>
-          <p><span className="font-medium">Homework:</span> Bars 9–16, ♩= 60, 15 mins daily</p>
-          <p><span className="font-medium">Next lesson:</span> Wednesday 4 Mar, 3:00 PM</p>
-        </div>
-        <div className="mt-2 flex items-center gap-1 text-[10px] text-green-600">
-          <CheckCircle2 className="h-3 w-3" /> Parent notified automatically
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FilesMockup() {
-  const [opened, setOpened] = useState<string | null>(null);
-  const files = [
-    { name: "Für Elise – Beethoven.pdf", size: "1.2 MB", type: "Score" },
-    { name: "Grade 5 Scales Reference.pdf", size: "340 KB", type: "Reference" },
-    { name: "Sight Reading Pack A.pdf", size: "2.1 MB", type: "Exercise" },
-  ];
+  const [tab, setTab] = useState<"progress" | "homework" | "messages">("progress");
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-semibold text-muted-foreground">SOPHIE'S FILES</p>
-      {files.map((f) => (
-        <div
-          key={f.name}
-          className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50 ${opened === f.name ? "border-primary bg-primary/5" : "bg-background"}`}
-          onClick={() => setOpened(f.name)}
-        >
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            <div>
-              <p className="text-[11px] font-medium">{f.name}</p>
-              <p className="text-[10px] text-muted-foreground">{f.type} · {f.size}</p>
-            </div>
+      {/* Header */}
+      <div className="flex items-center justify-between rounded-lg border bg-background px-3 py-2.5 shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">S</div>
+          <div>
+            <p className="text-xs font-semibold">Sophie Turner</p>
+            <p className="text-[9px] text-muted-foreground">Grade 5 · Active student · Since Jan 2024</p>
           </div>
-          <ChevronRight className="h-3 w-3 text-muted-foreground" />
         </div>
-      ))}
-      {opened && (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-[10px] text-primary">
-          📄 Opening <span className="font-semibold">{opened}</span> in the score viewer…
+        <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1">
+          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+          <span className="text-[9px] font-medium text-emerald-600">Up to date</span>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: "Lessons", value: "25", icon: Calendar },
+          { label: "Pieces Learned", value: "18", icon: Music },
+          { label: "Attendance", value: "98%", icon: Award },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-lg border bg-background p-2 text-center shadow-sm">
+            <Icon className="mx-auto mb-1 h-3.5 w-3.5 text-primary" />
+            <p className="text-sm font-bold">{value}</p>
+            <p className="text-[9px] text-muted-foreground">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 rounded-lg border bg-muted p-1">
+        {(["progress", "homework", "messages"] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`flex-1 rounded-md py-1 text-[10px] font-medium capitalize transition-colors ${tab === t ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === "progress" && (
+        <div className="rounded-lg border bg-background p-3 shadow-sm space-y-2">
+          <p className="text-[9px] font-semibold uppercase text-muted-foreground">Latest Lesson — 25 Feb 2026</p>
+          <div className="rounded bg-muted/50 p-2 text-[10px] space-y-1">
+            <p><span className="font-semibold">Covered:</span> Für Elise (bars 1–16), C Major Scale</p>
+            <p><span className="font-semibold">Teacher's note:</span> Great left hand progress. Focus on dynamics.</p>
+            <p><span className="font-semibold">Next lesson:</span> Wed 4 Mar, 3:00 PM</p>
+          </div>
+          <div className="flex items-center gap-1 text-[9px] text-emerald-600">
+            <Bell className="h-3 w-3" /> You were notified 2 hours ago
+          </div>
+        </div>
+      )}
+
+      {tab === "homework" && (
+        <div className="rounded-lg border bg-background p-3 shadow-sm space-y-2">
+          <p className="text-[9px] font-semibold uppercase text-muted-foreground">This Week's Homework</p>
+          {[
+            { task: "Für Elise — bars 9–16 at ♩= 60", done: true },
+            { task: "C Major scale, hands together", done: true },
+            { task: "Sight reading exercise 5", done: false },
+          ].map(({ task, done }) => (
+            <div key={task} className="flex items-center gap-2">
+              <div className={`h-3.5 w-3.5 shrink-0 rounded border-2 flex items-center justify-center ${done ? "border-primary bg-primary" : "border-muted-foreground"}`}>
+                {done && <CheckCheck className="h-2 w-2 text-primary-foreground" />}
+              </div>
+              <p className={`text-[10px] ${done ? "line-through text-muted-foreground" : ""}`}>{task}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "messages" && (
+        <div className="rounded-lg border bg-background p-3 shadow-sm space-y-2">
+          <p className="text-[9px] font-semibold uppercase text-muted-foreground">Messages</p>
+          {[
+            { from: "Julius (Teacher)", msg: "Sophie did really well today! Keep up the daily practice.", time: "2h ago", isTeacher: true },
+            { from: "You", msg: "Thank you! She's been practising every day 😊", time: "1h ago", isTeacher: false },
+          ].map((m, i) => (
+            <div key={i} className={`flex flex-col rounded-lg p-2 text-[10px] ${m.isTeacher ? "bg-muted/50" : "bg-primary/5 items-end"}`}>
+              <span className="text-[8px] font-semibold text-muted-foreground mb-0.5">{m.from} · {m.time}</span>
+              <p>{m.msg}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-const mockupTabs = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, component: <DashboardMockup /> },
-  { id: "lessons", label: "Lesson Log", icon: ClipboardList, component: <LessonLogMockup /> },
-  { id: "parents", label: "Parent Portal", icon: UserCircle, component: <ParentPortalMockup /> },
-  { id: "files", label: "Files", icon: FolderOpen, component: <FilesMockup /> },
+function FilesMockup() {
+  const [opened, setOpened] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const files = [
+    { name: "Für Elise – Beethoven.pdf", size: "1.2 MB", type: "Score", student: "Sophie T.", pages: 4 },
+    { name: "Grade 5 Scales Reference.pdf", size: "340 KB", type: "Reference", student: "All students", pages: 2 },
+    { name: "Moonlight Sonata – Beethoven.pdf", size: "3.1 MB", type: "Score", student: "Aria M.", pages: 8 },
+    { name: "Sight Reading Pack A.pdf", size: "2.1 MB", type: "Exercise", student: "Sophie T.", pages: 12 },
+    { name: "Minuet in G – Bach.pdf", size: "890 KB", type: "Score", student: "Liam K.", pages: 3 },
+  ];
+  const filtered = files.filter(f =>
+    f.name.toLowerCase().includes(search.toLowerCase()) ||
+    f.student.toLowerCase().includes(search.toLowerCase())
+  );
+  return (
+    <div className="space-y-2">
+      {/* Search + upload */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+          <input
+            className="w-full rounded-lg border bg-background py-1.5 pl-6 pr-2 text-[11px] outline-none focus:ring-1 focus:ring-primary"
+            placeholder="Search files or students…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <button className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-[10px] font-medium text-primary-foreground">
+          <Paperclip className="h-3 w-3" /> Upload
+        </button>
+      </div>
+
+      {/* Stats bar */}
+      <div className="flex gap-2 rounded-lg border bg-background px-3 py-2 text-center">
+        {[["5", "Files stored"], ["3", "Students"], ["2", "Scores"]].map(([v, l]) => (
+          <div key={l} className="flex-1">
+            <p className="text-xs font-bold">{v}</p>
+            <p className="text-[8px] text-muted-foreground">{l}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* File list */}
+      <div className="rounded-lg border bg-background shadow-sm overflow-hidden">
+        {filtered.map((f) => (
+          <div
+            key={f.name}
+            className={`flex cursor-pointer items-center justify-between border-b px-3 py-2 last:border-0 transition-colors ${opened === f.name ? "bg-primary/5" : "hover:bg-muted/30"}`}
+            onClick={() => setOpened(opened === f.name ? null : f.name)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                <FileText className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-[11px] font-medium leading-tight">{f.name}</p>
+                <p className="text-[9px] text-muted-foreground">{f.student} · {f.type} · {f.pages} pages</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-muted-foreground">{f.size}</span>
+              <ChevronRight className={`h-3 w-3 text-muted-foreground transition-transform ${opened === f.name ? "rotate-90" : ""}`} />
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <p className="px-3 py-4 text-center text-[10px] text-muted-foreground">No files match your search.</p>
+        )}
+      </div>
+
+      {opened && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+          <p className="text-[10px] font-semibold text-primary">📄 {opened}</p>
+          <div className="flex gap-2">
+            <button className="flex-1 rounded bg-primary px-2 py-1.5 text-[9px] font-medium text-primary-foreground">Open in Viewer</button>
+            <button className="flex items-center gap-1 rounded border px-2 py-1.5 text-[9px] font-medium">
+              <Download className="h-3 w-3" /> Download
+            </button>
+            <button className="flex items-center gap-1 rounded border px-2 py-1.5 text-[9px] font-medium">
+              <Send className="h-3 w-3" /> Share
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RepertoireMockup() {
+  const [selected, setSelected] = useState<string | null>(null);
+  const pieces = [
+    { title: "Für Elise", composer: "Beethoven", student: "Sophie T.", level: "Grade 5", status: "In Progress", started: "Jan 2026" },
+    { title: "Moonlight Sonata", composer: "Beethoven", student: "Aria M.", level: "Grade 7", status: "In Progress", started: "Dec 2025" },
+    { title: "Minuet in G", composer: "Bach", student: "Liam K.", level: "Grade 2", status: "Completed", started: "Nov 2025" },
+    { title: "Sonatina Op.36", composer: "Clementi", student: "Noah P.", level: "Grade 4", status: "In Progress", started: "Feb 2026" },
+    { title: "Turkish March", composer: "Mozart", student: "Aria M.", level: "Grade 7", status: "Completed", started: "Oct 2025" },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: "Active Pieces", value: "8", icon: Music },
+          { label: "Completed", value: "23", icon: Award },
+          { label: "Students", value: "14", icon: Users },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-lg border bg-background p-2 text-center shadow-sm">
+            <Icon className="mx-auto mb-1 h-3.5 w-3.5 text-primary" />
+            <p className="text-sm font-bold">{value}</p>
+            <p className="text-[9px] text-muted-foreground">{label}</p>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-lg border bg-background shadow-sm overflow-hidden">
+        <div className="border-b bg-muted/40 px-3 py-2">
+          <p className="text-[10px] font-semibold text-muted-foreground">CURRENT REPERTOIRE</p>
+        </div>
+        {pieces.map((p) => (
+          <div
+            key={`${p.title}-${p.student}`}
+            className={`cursor-pointer border-b px-3 py-2 last:border-0 transition-colors ${selected === `${p.title}-${p.student}` ? "bg-primary/5" : "hover:bg-muted/30"}`}
+            onClick={() => setSelected(selected === `${p.title}-${p.student}` ? null : `${p.title}-${p.student}`)}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-semibold">{p.title} <span className="font-normal text-muted-foreground">— {p.composer}</span></p>
+                <p className="text-[9px] text-muted-foreground">{p.student} · {p.level}</p>
+              </div>
+              <span className={`rounded-full px-2 py-0.5 text-[8px] font-medium ${p.status === "Completed" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-700"}`}>
+                {p.status}
+              </span>
+            </div>
+            {selected === `${p.title}-${p.student}` && (
+              <div className="mt-1.5 flex gap-2 border-t pt-1.5">
+                <span className="text-[9px] text-muted-foreground">Started: {p.started}</span>
+                <button className="ml-auto rounded bg-primary px-2 py-0.5 text-[9px] text-primary-foreground">View Full History</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const MOCKUP_TABS = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, Component: DashboardMockup },
+  { id: "lessons", label: "Lesson Log", icon: ClipboardList, Component: LessonLogMockup },
+  { id: "parents", label: "Parent Portal", icon: UserCircle, Component: ParentPortalMockup },
+  { id: "files", label: "Files & Scores", icon: FolderOpen, Component: FilesMockup },
+  { id: "repertoire", label: "Repertoire", icon: Music, Component: RepertoireMockup },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -225,7 +472,7 @@ export default function SalesPage() {
     }
   };
 
-  const activeScreen = mockupTabs.find((t) => t.id === activeTab);
+  const activeScreen = MOCKUP_TABS.find((t) => t.id === activeTab);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
@@ -282,7 +529,7 @@ export default function SalesPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             {/* Tab buttons */}
             <div className="flex flex-row flex-wrap gap-2 lg:flex-col lg:w-48 lg:shrink-0">
-              {mockupTabs.map(({ id, label, icon: Icon }) => (
+              {MOCKUP_TABS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
@@ -314,7 +561,7 @@ export default function SalesPage() {
                 {activeScreen && (() => { const Icon = activeScreen.icon; return <Icon className="h-4 w-4 text-primary" />; })()}
                 <p className="text-sm font-semibold">{activeScreen?.label}</p>
                 </div>
-                {activeScreen?.component}
+                {activeScreen && <activeScreen.Component />}
               </div>
             </div>
           </div>
