@@ -265,6 +265,12 @@ const IMSLPSearch = () => {
                   </a>
                 </div>
               )}
+              {!loadingEditions && editions.length > 0 && (
+                <div className="flex items-start gap-2 px-1 pb-2 text-xs text-muted-foreground bg-muted/40 rounded-lg p-3 border border-border/40">
+                  <Download size={14} className="shrink-0 mt-0.5" />
+                  <span>IMSLP protects files from automated downloads. Click <strong>Download</strong> to open the file in a new tab, save it, then upload it using the <strong>Upload File</strong> button on the Files page.</span>
+                </div>
+              )}
               {editions.map((edition, i) => (
                 <Card key={i} className="border-border/50">
                   <CardContent className="p-4">
@@ -275,22 +281,10 @@ const IMSLPSearch = () => {
                       </div>
                       <div className="flex gap-2 shrink-0">
                         <a href={edition.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm">
-                            <ExternalLink size={14} className="mr-1" /> Preview
+                          <Button size="sm">
+                            <Download size={14} className="mr-1" /> Download
                           </Button>
                         </a>
-                        <Button
-                          size="sm"
-                          onClick={() => handleImportEdition(edition)}
-                          disabled={importing === edition.url}
-                        >
-                          {importing === edition.url ? (
-                            <Loader2 size={14} className="mr-1 animate-spin" />
-                          ) : (
-                            <Download size={14} className="mr-1" />
-                          )}
-                          Import
-                        </Button>
                       </div>
                     </div>
                   </CardContent>
