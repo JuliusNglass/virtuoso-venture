@@ -565,9 +565,9 @@ function useVideoExport(cardRef: React.RefObject<HTMLDivElement>) {
       setExportStep("Recording video…");
       setExportProgress(45);
 
-      // Output canvas — 390x844 (9:16 mobile)
-      const W = 390;
-      const H = 844;
+      // Output canvas — 780x1688 (9:16 mobile @ 2x for crisp text)
+      const W = 780;
+      const H = 1688;
       const canvas = document.createElement("canvas");
       canvas.width = W;
       canvas.height = H;
@@ -634,6 +634,7 @@ function useVideoExport(cardRef: React.RefObject<HTMLDivElement>) {
         const audioBuffer = await audioCtx.decodeAudioData(await blob.arrayBuffer());
         const source = audioCtx.createBufferSource();
         source.buffer = audioBuffer;
+        source.playbackRate.value = 1.25;
         source.connect(dest);
         source.start();
 
