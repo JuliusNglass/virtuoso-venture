@@ -3,7 +3,8 @@ import {
   Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
   Users, BookOpen, CalendarCheck, Music, FolderOpen, UserCircle,
   CheckCircle2, Clock, TrendingUp, CheckCheck, Bell, Award,
-  PenLine, Send, ChevronRight, BarChart2, Loader2, Video, Download
+  PenLine, Send, ChevronRight, BarChart2, Loader2, Video, Download,
+  ScreenShare, Clapperboard, StopCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import html2canvas from "html2canvas";
@@ -682,6 +683,186 @@ function useVideoExport(cardRef: React.RefObject<HTMLDivElement>) {
   return { exporting, exportProgress, exportStep, exportVideo };
 }
 
+// ─── Hook: Tab Capture (getDisplayMedia) ────────────────────────────────────
+
+function useTabCapture() {
+  const [recording, setRecording] = useState(false);
+  const [status, setStatus] = useState("");
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+
+  const startRecording = async () => {
+    try {
+      setStatus("Requesting screen share…");
+      const stream = await (navigator.mediaDevices as any).getDisplayMedia({
+        video: { frameRate: 30, displaySurface: "browser" },
+        audio: { echoCancellation: false, noiseSuppression: false },
+        preferCurrentTab: true,
+      });
+
+      chunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+        ? "video/webm;codecs=vp9,opus"
+        : "video/webm";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "studioflow-screen-recording.webm";
+        a.click();
+        setRecording(false);
+        setStatus("Saved!");
+        stream.getTracks().forEach((t: MediaStreamTrack) => t.stop());
+        setTimeout(() => setStatus(""), 3000);
+      };
+
+      // Auto-stop when user ends share
+      stream.getVideoTracks()[0].onended = () => {
+        if (recorder.state !== "inactive") recorder.stop();
+      };
+
+      recorder.start(100);
+      setRecording(true);
+      setStatus("Recording… Navigate the app, then click Stop");
+    } catch (err: any) {
+      if (err?.name !== "NotAllowedError") console.error(err);
+      setStatus("Cancelled");
+      setTimeout(() => setStatus(""), 2000);
+    }
+  };
+
+  const stopRecording = () => {
+    recorderRef.current?.stop();
+    setStatus("Saving…");
+  };
+
+  return { recording, status, startRecording, stopRecording };
+}
+
+// ─── Hook: Scripted App Demo (html2canvas tour of real app pages) ─────────────
+
+const APP_PAGES = [
+  { label: "Dashboard", path: "/dashboard" },
+  { label: "Students", path: "/students" },
+  { label: "Lessons", path: "/lessons" },
+  { label: "Calendar", path: "/calendar" },
+  { label: "Repertoire", path: "/repertoire" },
+  { label: "Files", path: "/files" },
+];
+
+function useAppDemoRecorder() {
+  const [running, setRunning] = useState(false);
+  const [step, setStep] = useState("");
+  const [progress, setProgress] = useState(0);
+
+  const recordAppDemo = async () => {
+    setRunning(true);
+    setProgress(0);
+
+    try {
+      const W = 1280;
+      const H = 720;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d")!;
+
+      const chunks: BlobPart[] = [];
+      const stream = canvas.captureStream(30);
+      const recorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? "video/webm;codecs=vp9"
+          : "video/webm",
+      });
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.start(100);
+
+      // Open each page in a hidden iframe, capture with html2canvas
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:1280px;height:720px;border:none;`;
+      document.body.appendChild(iframe);
+
+      for (let i = 0; i < APP_PAGES.length; i++) {
+        const page = APP_PAGES[i];
+        setStep(`Capturing ${page.label} (${i + 1}/${APP_PAGES.length})…`);
+        setProgress(Math.round((i / APP_PAGES.length) * 80));
+
+        // Navigate iframe
+        await new Promise<void>((resolve) => {
+          iframe.onload = () => resolve();
+          iframe.src = page.path;
+          setTimeout(resolve, 4000); // max 4s wait
+        });
+
+        // Extra settle time for JS render
+        await new Promise(r => setTimeout(r, 1500));
+
+        // Capture the iframe's document
+        let snap: HTMLCanvasElement | null = null;
+        try {
+          snap = await html2canvas(iframe.contentDocument!.body, {
+            scale: 1,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            logging: false,
+            width: 1280,
+            height: 720,
+          });
+        } catch {
+          // Fallback: render a label card
+          ctx.fillStyle = "#f5f5f0";
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "#1a1a2e";
+          ctx.font = "bold 48px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(page.label, W / 2, H / 2);
+        }
+
+        if (snap) {
+          // Draw snapshot, scaled to canvas
+          const scale = Math.min(W / snap.width, H / snap.height);
+          const sw = snap.width * scale;
+          const sh = snap.height * scale;
+          ctx.fillStyle = "#f5f5f0";
+          ctx.fillRect(0, 0, W, H);
+          ctx.drawImage(snap, (W - sw) / 2, (H - sh) / 2, sw, sh);
+        }
+
+        // Hold this frame for 3 seconds
+        await new Promise(r => setTimeout(r, 3000));
+      }
+
+      document.body.removeChild(iframe);
+
+      setStep("Saving video…");
+      setProgress(95);
+      recorder.stop();
+      await new Promise<void>(r => { recorder.onstop = () => r(); });
+
+      const blob = new Blob(chunks, { type: "video/webm" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "studioflow-app-demo.webm";
+      a.click();
+
+      setProgress(100);
+      setStep("Done! Check your downloads.");
+      setTimeout(() => { setRunning(false); setStep(""); setProgress(0); }, 3000);
+    } catch (err) {
+      console.error("App demo error:", err);
+      setRunning(false);
+      setStep("Failed. Are you logged in?");
+      setTimeout(() => setStep(""), 4000);
+    }
+  };
+
+  return { running, step, progress, recordAppDemo };
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function GuidedTour() {
@@ -695,6 +876,8 @@ export function GuidedTour() {
   const audioCache = useRef<Record<number, string>>({});
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { exporting, exportProgress, exportStep, exportVideo } = useVideoExport(cardRef);
+  const { recording, status: tabStatus, startRecording, stopRecording } = useTabCapture();
+  const { running: demoRunning, step: demoStep, progress: demoProgress, recordAppDemo } = useAppDemoRecorder();
 
   const slide = SLIDES[current];
 
@@ -959,6 +1142,35 @@ export function GuidedTour() {
           </div>
         )}
 
+        {/* Tab capture status bar */}
+        {(recording || tabStatus) && (
+          <div className="mt-3 rounded-xl border bg-background/80 px-4 py-3 flex items-center gap-3">
+            {recording && <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />}
+            <span className="text-xs font-medium text-foreground flex-1">{tabStatus || "Recording…"}</span>
+            {recording && (
+              <button onClick={stopRecording} className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                <StopCircle className="h-3.5 w-3.5" /> Stop
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* App demo progress bar */}
+        {demoRunning && (
+          <div className="mt-3 rounded-xl border bg-background/80 px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-foreground flex items-center gap-2">
+                <Clapperboard className="h-3.5 w-3.5 text-primary animate-pulse" />
+                {demoStep}
+              </span>
+              <span className="text-xs font-bold text-primary">{demoProgress}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${demoProgress}%` }} />
+            </div>
+          </div>
+        )}
+
         {/* Controls row */}
         <div className="flex items-center justify-between mt-4 gap-3">
           <button
@@ -986,6 +1198,30 @@ export function GuidedTour() {
                 <Download className="h-3.5 w-3.5" />
               )}
               {exporting ? "Exporting…" : "Export Video"}
+            </button>
+
+            {/* Option A: Tab Capture */}
+            <button
+              onClick={recording ? stopRecording : startRecording}
+              disabled={exporting || demoRunning}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors disabled:opacity-50 disabled:pointer-events-none shadow-sm ${
+                recording
+                  ? "bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90"
+                  : "bg-background hover:bg-muted"
+              }`}
+            >
+              {recording ? <StopCircle className="h-3.5 w-3.5" /> : <ScreenShare className="h-3.5 w-3.5" />}
+              {recording ? "Stop Recording" : "A: Record Screen"}
+            </button>
+
+            {/* Option B: Scripted App Tour */}
+            <button
+              onClick={recordAppDemo}
+              disabled={exporting || demoRunning || recording}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border bg-background hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+            >
+              {demoRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Clapperboard className="h-3.5 w-3.5" />}
+              {demoRunning ? "Recording…" : "B: App Demo Video"}
             </button>
           </div>
 
