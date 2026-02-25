@@ -746,13 +746,35 @@ function useTabCapture() {
 // ─── Hook: Scripted App Demo (html2canvas tour of real app pages) ─────────────
 
 const APP_PAGES = [
-  { label: "Dashboard", path: "/dashboard" },
-  { label: "Students", path: "/students" },
-  { label: "Lessons", path: "/lessons" },
-  { label: "Calendar", path: "/calendar" },
-  { label: "Repertoire", path: "/repertoire" },
-  { label: "Files", path: "/files" },
+  { label: "Dashboard", path: "/dashboard", narration: "Here's the Dashboard — your studio at a glance. See upcoming lessons, student activity, and key stats the moment you log in." },
+  { label: "Students", path: "/students", narration: "The Students page keeps every profile in one place — level, lesson day, contact details, and progress history." },
+  { label: "Lessons", path: "/lessons", narration: "Log lesson notes, homework, and the pieces covered. Parents get notified automatically after every session." },
+  { label: "Calendar", path: "/calendar", narration: "The Calendar view shows your full week at a glance. No more double-booking or missed lessons." },
+  { label: "Repertoire", path: "/repertoire", narration: "Track every piece each student is learning or has completed. Build a rich musical history over time." },
+  { label: "Files", path: "/files", narration: "Store and share sheet music, backing tracks, and resources — all linked directly to students and lessons." },
 ];
+
+// Fetch TTS audio blob from the existing tour-tts edge function
+async function fetchNarrationBlob(text: string): Promise<ArrayBuffer | null> {
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tour-tts`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text }),
+      }
+    );
+    if (!res.ok) return null;
+    return await res.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
 
 function useAppDemoRecorder() {
   const [running, setRunning] = useState(false);
@@ -763,31 +785,43 @@ function useAppDemoRecorder() {
     setRunning(true);
     setProgress(0);
 
-    // Output canvas at 2× for sharper renders, then downscale on draw
     const W = 1280;
     const H = 720;
-    const SCALE = 2; // html2canvas render scale
+    const SCALE = 2;
 
     try {
+      // ── AudioContext for mixing TTS into the recording ──
+      const audioCtx = new AudioContext();
+      const audioDestination = audioCtx.createMediaStreamDestination();
+
       const canvas = document.createElement("canvas");
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext("2d", { alpha: false })!;
 
-      // High-bitrate VP9 stream for quality
-      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-        ? "video/webm;codecs=vp9"
-        : "video/webm";
+      // Merge video + audio tracks into one stream
+      const videoStream = canvas.captureStream(30);
+      const combinedStream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioDestination.stream.getAudioTracks(),
+      ]);
+
+      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+        ? "video/webm;codecs=vp9,opus"
+        : MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? "video/webm;codecs=vp9"
+          : "video/webm";
+
       const chunks: BlobPart[] = [];
-      const stream = canvas.captureStream(30);
-      const recorder = new MediaRecorder(stream, {
+      const recorder = new MediaRecorder(combinedStream, {
         mimeType,
-        videoBitsPerSecond: 8_000_000, // 8 Mbps for high quality
+        videoBitsPerSecond: 8_000_000,
+        audioBitsPerSecond: 128_000,
       });
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
       recorder.start(100);
 
-      // Render a "loading" transition frame onto canvas
+      // ── Helpers ──
       const drawTransition = (label: string) => {
         ctx.fillStyle = "#0f172a";
         ctx.fillRect(0, 0, W, H);
@@ -800,54 +834,68 @@ function useAppDemoRecorder() {
         ctx.fillText("StudioFlow", W / 2, H / 2 + 30);
       };
 
-      // Draw snapshot onto canvas, filling the frame
       const drawSnap = (snap: HTMLCanvasElement) => {
         ctx.fillStyle = "#f8fafc";
         ctx.fillRect(0, 0, W, H);
-        // snap was rendered at SCALE×, so actual content is snap.width/SCALE
         const srcW = snap.width;
         const srcH = snap.height;
         const fitScale = Math.min(W / (srcW / SCALE), H / (srcH / SCALE));
         const dw = (srcW / SCALE) * fitScale;
         const dh = (srcH / SCALE) * fitScale;
-        const dx = (W - dw) / 2;
-        const dy = (H - dh) / 2;
-        ctx.drawImage(snap, 0, 0, srcW, srcH, dx, dy, dw, dh);
+        ctx.drawImage(snap, 0, 0, srcW, srcH, (W - dw) / 2, (H - dh) / 2, dw, dh);
       };
 
-      // Create a visible, same-origin iframe for reliable html2canvas capture
+      // Play an ArrayBuffer through AudioContext (routed to recorder)
+      const playAudioBuffer = async (buf: ArrayBuffer): Promise<void> => {
+        return new Promise(async (resolve) => {
+          try {
+            const decoded = await audioCtx.decodeAudioData(buf);
+            const source = audioCtx.createBufferSource();
+            source.buffer = decoded;
+            source.connect(audioDestination);
+            source.onended = () => resolve();
+            source.start();
+          } catch {
+            resolve();
+          }
+        });
+      };
+
+      // Pre-fetch all narrations in parallel to minimise wait time
+      setStep("Preparing narrations…");
+      const narrationBuffers = await Promise.all(
+        APP_PAGES.map(p => fetchNarrationBlob(p.narration))
+      );
+
       const iframe = document.createElement("iframe");
       iframe.style.cssText = `
-        position: fixed;
-        top: 0; left: 0;
+        position: fixed; top: 0; left: 0;
         width: ${W}px; height: ${H}px;
-        border: none;
-        z-index: -1;
-        opacity: 0;
-        pointer-events: none;
+        border: none; z-index: -1;
+        opacity: 0; pointer-events: none;
       `;
       document.body.appendChild(iframe);
 
       for (let i = 0; i < APP_PAGES.length; i++) {
         const page = APP_PAGES[i];
         setStep(`Capturing ${page.label} (${i + 1}/${APP_PAGES.length})…`);
-        setProgress(Math.round((i / APP_PAGES.length) * 80));
+        setProgress(Math.round(10 + (i / APP_PAGES.length) * 75));
 
-        // Show transition frame for 0.8s
+        // Transition frame
         drawTransition(page.label);
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise(r => setTimeout(r, 500));
 
-        // Navigate iframe to the real app page
+        // Navigate iframe
         await new Promise<void>((resolve) => {
           const timer = setTimeout(resolve, 5000);
           iframe.onload = () => { clearTimeout(timer); resolve(); };
           iframe.src = window.location.origin + page.path;
         });
 
-        // Wait for JS components to render (React hydration + data fetch)
+        // Wait for React render + data
         await new Promise(r => setTimeout(r, 2500));
 
-        // Capture at 2× scale for crisp output
+        // Capture screenshot
         let snap: HTMLCanvasElement | null = null;
         try {
           snap = await html2canvas(iframe.contentDocument!.body, {
@@ -866,23 +914,42 @@ function useAppDemoRecorder() {
           });
         } catch (e) {
           console.warn("html2canvas failed for", page.label, e);
-          drawTransition(page.label);
         }
 
-        if (snap) {
-          drawSnap(snap);
+        if (snap) drawSnap(snap);
+
+        // Play narration audio (routed into the recording) while holding the frame
+        const buf = narrationBuffers[i];
+        if (buf) {
+          await playAudioBuffer(buf.slice(0)); // slice to clone — decodeAudioData detaches
+        } else {
+          // No audio: hold frame for 4s
+          await new Promise(r => setTimeout(r, 4000));
         }
 
-        // Hold this frame for 3 seconds
-        await new Promise(r => setTimeout(r, 3000));
+        // Brief pause between pages
+        await new Promise(r => setTimeout(r, 600));
       }
 
       document.body.removeChild(iframe);
+
+      // Closing frame
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 42px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("StudioFlow", W / 2, H / 2 - 10);
+      ctx.font = "20px system-ui, sans-serif";
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillText("The all-in-one studio management platform", W / 2, H / 2 + 35);
+      await new Promise(r => setTimeout(r, 1500));
 
       setStep("Saving video…");
       setProgress(95);
       recorder.stop();
       await new Promise<void>(r => { recorder.onstop = () => r(); });
+      audioCtx.close();
 
       const blob = new Blob(chunks, { type: "video/webm" });
       const a = document.createElement("a");
