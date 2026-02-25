@@ -490,11 +490,16 @@ export default function SalesPage() {
           <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
             StudioDesk is the all-in-one studio management tool built by a classically trained musician who got tired of the chaos — and built the tool they always wished existed.
           </p>
-          <a href="#waitlist">
-            <Button size="lg" className="px-8 py-6 text-base font-semibold shadow-lg">
-              Join the Early Access List →
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" className="px-8 py-6 text-base font-semibold shadow-lg" onClick={() => window.location.href = "/auth"}>
+              Start Your Free Studio →
             </Button>
-          </a>
+            <a href="#waitlist">
+              <Button size="lg" variant="outline" className="px-8 py-6 text-base">
+                Join Waitlist
+              </Button>
+            </a>
+          </div>
         </div>
       </section>
 

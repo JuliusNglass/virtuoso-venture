@@ -109,6 +109,7 @@ export type Database = {
           preferred_time: string | null
           reviewed_at: string | null
           status: string
+          studio_id: string | null
           updated_at: string
         }
         Insert: {
@@ -127,6 +128,7 @@ export type Database = {
           preferred_time?: string | null
           reviewed_at?: string | null
           status?: string
+          studio_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -145,9 +147,18 @@ export type Database = {
           preferred_time?: string | null
           reviewed_at?: string | null
           status?: string
+          studio_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lesson_requests_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lessons: {
         Row: {
@@ -275,6 +286,7 @@ export type Database = {
           parent_phone: string | null
           parent_user_id: string | null
           status: string
+          studio_id: string | null
           updated_at: string
         }
         Insert: {
@@ -293,6 +305,7 @@ export type Database = {
           parent_phone?: string | null
           parent_user_id?: string | null
           status?: string
+          studio_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -311,6 +324,42 @@ export type Database = {
           parent_phone?: string | null
           parent_user_id?: string | null
           status?: string
+          studio_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studios: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_user_id: string
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_user_id: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_user_id?: string
+          slug?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -319,25 +368,37 @@ export type Database = {
         Row: {
           id: string
           role: Database["public"]["Enums"]["app_role"]
+          studio_id: string | null
           user_id: string
         }
         Insert: {
           id?: string
           role: Database["public"]["Enums"]["app_role"]
+          studio_id?: string | null
           user_id: string
         }
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          studio_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_my_studio_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -345,6 +406,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      owns_studio: { Args: { _studio_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "parent"

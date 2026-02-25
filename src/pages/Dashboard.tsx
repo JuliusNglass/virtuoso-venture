@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useStudio } from "@/hooks/useStudio";
 import FileUploadDialog from "@/components/FileUploadDialog";
 import { format, startOfWeek, endOfWeek, formatDistanceToNow } from "date-fns";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { studio, loading: studioLoading } = useStudio();
   const today = new Date();
   const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
   const weekEnd = format(endOfWeek(today, { weekStartsOn: 1 }), "yyyy-MM-dd");
@@ -67,11 +69,17 @@ const Dashboard = () => {
   const hour = today.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
+  // Redirect to onboarding if no studio yet
+  if (!studioLoading && !studio) {
+    navigate("/onboarding");
+    return null;
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold">{greeting}, Shanika</h1>
+          <h1 className="font-heading text-3xl font-bold">{greeting}, {studio?.name ?? "Studio"}</h1>
           <p className="text-muted-foreground mt-1">Here's what's happening with your studio today.</p>
         </div>
         <FileUploadDialog students={studentOptions} />
