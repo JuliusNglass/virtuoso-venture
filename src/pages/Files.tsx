@@ -2,12 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Music, FileText, Camera, Download, Trash2, Search } from "lucide-react";
+import { Music, FileText, Camera, Download, Trash2, Search, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import FileUploadDialog from "@/components/FileUploadDialog";
+import ScoreViewer from "@/components/ScoreViewer";
+import IMSLPSearch from "@/components/IMSLPSearch";
 
 const fileTypeIcons: Record<string, typeof FileText> = {
   music_sheet: Music,
@@ -23,9 +25,12 @@ const fileTypeLabels: Record<string, string> = {
   document: "Document",
 };
 
+const viewableTypes = ["application/pdf"];
+
 const Files = () => {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string; id: string } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -78,6 +83,12 @@ const Files = () => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const getPublicUrl = (filePath: string) =>
+    `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/studio-files/${filePath}`;
+
+  const canView = (mimeType: string | null) =>
+    mimeType && (viewableTypes.includes(mimeType) || mimeType.startsWith("image/"));
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -87,10 +98,13 @@ const Files = () => {
             Manage music sheets, scores, and photos
           </p>
         </div>
-        <FileUploadDialog
-          students={students ?? []}
-          onUploaded={() => queryClient.invalidateQueries({ queryKey: ["files"] })}
-        />
+        <div className="flex gap-2 flex-wrap">
+          <IMSLPSearch />
+          <FileUploadDialog
+            students={students ?? []}
+            onUploaded={() => queryClient.invalidateQueries({ queryKey: ["files"] })}
+          />
+        </div>
       </div>
 
       {/* Filters */}
@@ -125,7 +139,8 @@ const Files = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((file) => {
             const Icon = fileTypeIcons[file.file_type] || FileText;
-            const publicUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/studio-files/${file.file_path}`;
+            const publicUrl = getPublicUrl(file.file_path);
+            const isViewable = canView(file.mime_type);
             return (
               <Card key={file.id} className="border-border/50 hover:shadow-md transition-shadow">
                 <CardContent className="p-5">
@@ -145,6 +160,15 @@ const Files = () => {
                     </div>
                   </div>
                   <div className="flex gap-2 mt-3 justify-end">
+                    {isViewable && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setViewerFile({ url: publicUrl, name: file.name, id: file.id })}
+                      >
+                        <Eye size={14} className="mr-1" /> View
+                      </Button>
+                    )}
                     <a href={publicUrl} target="_blank" rel="noopener noreferrer">
                       <Button variant="ghost" size="sm">
                         <Download size={14} className="mr-1" /> Download
@@ -170,6 +194,17 @@ const Files = () => {
           <p className="text-muted-foreground">No files found</p>
           <p className="text-sm text-muted-foreground mt-1">Upload music sheets, scores, or photos to get started.</p>
         </div>
+      )}
+
+      {/* Score Viewer */}
+      {viewerFile && (
+        <ScoreViewer
+          open={!!viewerFile}
+          onOpenChange={(open) => !open && setViewerFile(null)}
+          fileUrl={viewerFile.url}
+          fileName={viewerFile.name}
+          fileId={viewerFile.id}
+        />
       )}
     </div>
   );
