@@ -14,23 +14,19 @@ serve(async (req) => {
   try {
     const { query, action, url, title } = await req.json();
 
-    // Search action: use MediaWiki opensearch API
+    // Search action: use MediaWiki full-text search API (better than opensearch for piece titles)
     if (!action || action === "search") {
-      const searchUrl = `https://imslp.org/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=20&namespace=0&format=json`;
+      const searchUrl = `https://imslp.org/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=20&srnamespace=0&format=json`;
       const res = await fetch(searchUrl, {
         headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
       });
       const data = await res.json();
 
-      // opensearch returns [query, [titles], [descriptions], [urls]]
-      const titles: string[] = data[1] || [];
-      const descriptions: string[] = data[2] || [];
-      const urls: string[] = data[3] || [];
-
-      const results = titles.map((t: string, i: number) => ({
-        title: t,
-        description: descriptions[i] || "",
-        url: urls[i] || `https://imslp.org/wiki/${encodeURIComponent(t.replace(/ /g, "_"))}`,
+      const searchResults = data?.query?.search || [];
+      const results = searchResults.map((r: any) => ({
+        title: r.title || "",
+        description: (r.snippet || "").replace(/<[^>]*>/g, ""), // strip HTML tags from snippet
+        url: `https://imslp.org/wiki/${encodeURIComponent((r.title || "").replace(/ /g, "_"))}`,
       }));
 
       return new Response(JSON.stringify({ results }), {
