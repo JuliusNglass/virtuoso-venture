@@ -3,9 +3,10 @@ import {
   Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
   Users, BookOpen, CalendarCheck, Music, FolderOpen, UserCircle,
   CheckCircle2, Clock, TrendingUp, CheckCheck, Bell, Award,
-  PenLine, Send, ChevronRight, BarChart2, Loader2
+  PenLine, Send, ChevronRight, BarChart2, Loader2, Video, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import html2canvas from "html2canvas";
 
 // ─── Slide data ─────────────────────────────────────────────────────────────
 
@@ -485,6 +486,192 @@ const SLIDES: Slide[] = [
   },
 ];
 
+// ─── Video Export Hook ────────────────────────────────────────────────────────
+
+function useVideoExport(cardRef: React.RefObject<HTMLDivElement>) {
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0); // 0-100
+  const [exportStep, setExportStep] = useState("");
+
+  const fetchAudioBlob = async (slideIndex: number): Promise<Blob> => {
+    const s = SLIDES[slideIndex];
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tour-tts`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text: s.voiceover }),
+      }
+    );
+    if (!response.ok) throw new Error(`TTS fetch failed for slide ${slideIndex + 1}`);
+    return response.blob();
+  };
+
+  const getAudioDuration = (blob: Blob): Promise<number> => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.addEventListener("loadedmetadata", () => {
+        resolve(audio.duration);
+        URL.revokeObjectURL(url);
+      });
+      audio.addEventListener("error", () => {
+        resolve(15); // fallback 15s
+        URL.revokeObjectURL(url);
+      });
+    });
+  };
+
+  const exportVideo = async (
+    onSlideChange: (index: number) => void,
+  ) => {
+    if (!cardRef.current) return;
+    setExporting(true);
+    setExportProgress(0);
+
+    try {
+      // Phase 1: Fetch all audio blobs
+      setExportStep("Fetching narration (1/10)…");
+      const audioBlobs: Blob[] = [];
+      for (let i = 0; i < SLIDES.length; i++) {
+        setExportStep(`Fetching narration (${i + 1}/${SLIDES.length})…`);
+        setExportProgress(Math.round((i / SLIDES.length) * 40));
+        const blob = await fetchAudioBlob(i);
+        audioBlobs.push(blob);
+      }
+
+      // Phase 2: Get durations
+      setExportStep("Measuring timing…");
+      const durations: number[] = [];
+      for (let i = 0; i < audioBlobs.length; i++) {
+        const dur = await getAudioDuration(audioBlobs[i]);
+        durations.push(dur + 0.5); // slight pause between slides
+      }
+
+      // Phase 3: Record using canvas + MediaRecorder
+      setExportStep("Recording video…");
+      setExportProgress(45);
+
+      // Output canvas — 390x844 (9:16 mobile)
+      const W = 390;
+      const H = 844;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d")!;
+
+      // Audio context for mixing
+      const audioCtx = new AudioContext();
+      const dest = audioCtx.createMediaStreamDestination();
+
+      // MediaRecorder — combine canvas stream + audio
+      const videoStream = canvas.captureStream(30);
+      const audioTracks = dest.stream.getAudioTracks();
+      audioTracks.forEach(t => videoStream.addTrack(t));
+
+      const chunks: BlobPart[] = [];
+      const recorder = new MediaRecorder(videoStream, {
+        mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+          ? "video/webm;codecs=vp9,opus"
+          : "video/webm",
+      });
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.start(100);
+
+      let frameHandle: number;
+      let currentSlideCanvas: HTMLCanvasElement | null = null;
+
+      const drawFrame = () => {
+        ctx.fillStyle = "#f5f5f0";
+        ctx.fillRect(0, 0, W, H);
+        if (currentSlideCanvas) {
+          // Scale slide canvas to fit width, center vertically
+          const scale = W / currentSlideCanvas.width;
+          const scaledH = currentSlideCanvas.height * scale;
+          const offsetY = Math.max(0, (H - scaledH) / 2);
+          ctx.drawImage(currentSlideCanvas, 0, offsetY, W, scaledH);
+        }
+        frameHandle = requestAnimationFrame(drawFrame);
+      };
+      drawFrame();
+
+      // Play each slide
+      for (let i = 0; i < SLIDES.length; i++) {
+        // Switch UI to this slide
+        onSlideChange(i);
+        setExportProgress(45 + Math.round((i / SLIDES.length) * 50));
+        setExportStep(`Recording slide ${i + 1}/${SLIDES.length}…`);
+
+        // Wait for DOM to update, then capture
+        await new Promise(r => setTimeout(r, 300));
+
+        if (cardRef.current) {
+          const snap = await html2canvas(cardRef.current, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: null,
+            logging: false,
+          });
+          currentSlideCanvas = snap;
+        }
+
+        // Play audio for this slide
+        const blob = audioBlobs[i];
+        const url = URL.createObjectURL(blob);
+        const audioBuffer = await audioCtx.decodeAudioData(await blob.arrayBuffer());
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(dest);
+        source.start();
+
+        // Wait for audio to finish + short gap
+        await new Promise<void>(resolve => {
+          source.onended = () => setTimeout(resolve, 500);
+        });
+
+        URL.revokeObjectURL(url);
+      }
+
+      // Stop recording
+      cancelAnimationFrame(frameHandle!);
+      recorder.stop();
+      audioCtx.close();
+
+      // Wait for recorder to finish
+      await new Promise<void>(resolve => { recorder.onstop = () => resolve(); });
+
+      // Download
+      setExportStep("Saving video…");
+      setExportProgress(98);
+      const videoBlob = new Blob(chunks, { type: "video/webm" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(videoBlob);
+      a.download = "studioflow-tour.webm";
+      a.click();
+      setExportProgress(100);
+      setExportStep("Done!");
+
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+        setExportStep("");
+      }, 2000);
+    } catch (err) {
+      console.error("Video export error:", err);
+      setExporting(false);
+      setExportProgress(0);
+      setExportStep("Export failed. Please try again.");
+      setTimeout(() => setExportStep(""), 3000);
+    }
+  };
+
+  return { exporting, exportProgress, exportStep, exportVideo };
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function GuidedTour() {
@@ -493,9 +680,11 @@ export function GuidedTour() {
   const [muted, setMuted] = useState(false);
   const [loadingAudio, setLoadingAudio] = useState(false);
   
+  const cardRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCache = useRef<Record<number, string>>({});
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { exporting, exportProgress, exportStep, exportVideo } = useVideoExport(cardRef);
 
   const slide = SLIDES[current];
 
@@ -649,7 +838,7 @@ export function GuidedTour() {
         </div>
 
         {/* Main card */}
-        <div className={`rounded-2xl border-2 bg-gradient-to-br ${slide.accent} shadow-2xl overflow-hidden transition-all duration-300`}>
+        <div ref={cardRef} className={`rounded-2xl border-2 bg-gradient-to-br ${slide.accent} shadow-2xl overflow-hidden transition-all duration-300`}>
 
           {/* Browser chrome bar */}
           <div className="flex items-center gap-1.5 border-b bg-background/90 backdrop-blur-sm px-4 py-2.5">
@@ -741,28 +930,60 @@ export function GuidedTour() {
           </div>
         </div>
 
+        {/* Export progress bar */}
+        {exporting && (
+          <div className="mt-3 rounded-xl border bg-background/80 px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-foreground flex items-center gap-2">
+                <Video className="h-3.5 w-3.5 text-primary animate-pulse" />
+                {exportStep}
+              </span>
+              <span className="text-xs font-bold text-primary">{exportProgress}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300"
+                style={{ width: `${exportProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Controls row */}
         <div className="flex items-center justify-between mt-4 gap-3">
           <button
             onClick={prev}
-            disabled={current === 0}
+            disabled={current === 0 || exporting}
             className="flex items-center gap-2 rounded-xl border bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-30 disabled:pointer-events-none shadow-sm"
           >
             <SkipBack className="h-4 w-4" />
             <span className="hidden sm:inline">Previous</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
             <span className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary border border-primary/30">
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               Auto-play on
             </span>
+            <button
+              onClick={() => exportVideo((idx) => { stopAudio(); setCurrent(idx); })}
+              disabled={exporting}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border bg-background hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none shadow-sm"
+            >
+              {exporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              {exporting ? "Exporting…" : "Export Video"}
+            </button>
           </div>
 
           {current < SLIDES.length - 1 ? (
             <button
               onClick={next}
-              className="flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+              disabled={exporting}
+              className="flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50"
             >
               <span className="hidden sm:inline">Next</span>
               <SkipForward className="h-4 w-4" />
