@@ -407,7 +407,7 @@ const SLIDES: Slide[] = [
     id: 1,
     title: "The Problem",
     subtitle: "Sound familiar?",
-    voiceover: "Picture a Sunday evening. You've just finished your last lesson of the week — but instead of relaxing, you're buried in sticky notes, scrolling through WhatsApp messages from parents, and trying to remember what you covered with each student. This is the reality for most independent music teachers. The teaching is the easy part. The admin? That's where your evenings go.",
+    voiceover: "Sticky notes, WhatsApp messages, three different spreadsheets — and it's Sunday evening again. The teaching is the easy part. The admin is where your evenings disappear.",
     accent: "from-destructive/20 to-destructive/5",
     visual: ProblemVisual,
   },
@@ -415,7 +415,7 @@ const SLIDES: Slide[] = [
     id: 2,
     title: "Meet StudioFlow",
     subtitle: "The solution you've been waiting for",
-    voiceover: "StudioFlow is the all-in-one studio management platform built specifically for independent music teachers. It brings your students, lessons, calendar, repertoire, files, and parent communication into one clean, beautiful workspace — so you can stop managing admin and start focusing on what you love: the music.",
+    voiceover: "StudioFlow brings your students, lessons, calendar, files, and parent communication into one place — built specifically for independent music teachers like you.",
     accent: "from-primary/20 to-primary/5",
     visual: MeetStudioFlowVisual,
   },
@@ -423,7 +423,7 @@ const SLIDES: Slide[] = [
     id: 3,
     title: "Student Profiles",
     subtitle: "Every student at your fingertips",
-    voiceover: "Every student gets a complete profile — their level, the pieces they're working on, their attendance record, and their full lesson history. No more searching through notebooks or trying to remember where you left off. Click a student's name and everything is right there.",
+    voiceover: "Every student gets a full profile — level, pieces, attendance, and lesson history. Click a name and everything is right there. No more digging through notebooks.",
     accent: "from-violet-500/20 to-violet-500/5",
     visual: StudentProfilesVisual,
   },
@@ -431,7 +431,7 @@ const SLIDES: Slide[] = [
     id: 4,
     title: "Lesson Notes & Homework",
     subtitle: "Log every session in under 60 seconds",
-    voiceover: "After each lesson, just jot down what you covered, what homework you've set, and how the student did. Mark them present, late, or absent. StudioFlow saves it all and automatically notifies the parent — so they always know what was covered and what to practise, without you sending a single message.",
+    voiceover: "Add what you covered, set homework, mark attendance — and StudioFlow automatically notifies the parent. One tap. Done.",
     accent: "from-amber-500/20 to-amber-500/5",
     visual: LessonNotesVisual,
   },
@@ -439,7 +439,7 @@ const SLIDES: Slide[] = [
     id: 5,
     title: "Attendance Tracking",
     subtitle: "Never lose track of who showed up",
-    voiceover: "StudioFlow tracks attendance across your whole studio automatically. You can see at a glance who's been consistent and who might be falling behind. No more manually tallying absences at the end of term — it's all calculated for you.",
+    voiceover: "Attendance is tracked automatically across your whole studio. See who's consistent, who's falling behind — no more tallying absences by hand.",
     accent: "from-emerald-500/20 to-emerald-500/5",
     visual: AttendanceVisual,
   },
@@ -447,7 +447,7 @@ const SLIDES: Slide[] = [
     id: 6,
     title: "Calendar & Scheduling",
     subtitle: "Your whole week at a glance",
-    voiceover: "See every lesson across your studio in a clean weekly view. Each time slot shows the student's name, their level, and the time — so you always know exactly what your week looks like. You can even export to Google Calendar if that's what you use.",
+    voiceover: "See every lesson in a clean weekly view — student name, level, and time. Export to Google Calendar in one click.",
     accent: "from-sky-500/20 to-sky-500/5",
     visual: CalendarVisual,
   },
@@ -455,7 +455,7 @@ const SLIDES: Slide[] = [
     id: 7,
     title: "Repertoire Library",
     subtitle: "Track every piece, every student",
-    voiceover: "StudioFlow keeps a living repertoire record for your whole studio. You can see which pieces each student is working on, when they started, whether it's in progress or completed — and browse a curated library of pieces sorted by genre and grade. Building a lesson plan has never been this easy.",
+    voiceover: "A living repertoire record for your whole studio — what each student is working on, what they've completed, all in one searchable list.",
     accent: "from-rose-500/20 to-rose-500/5",
     visual: RepertoireVisual,
   },
@@ -463,7 +463,7 @@ const SLIDES: Slide[] = [
     id: 8,
     title: "Files & Scores",
     subtitle: "Never lose a piece of sheet music again",
-    voiceover: "Upload PDFs of sheet music, exercises, and reference material and attach them to specific students or lessons. Everything is stored securely in the cloud and accessible from any device. You can even open scores in the built-in viewer and annotate them directly — no printer required.",
+    voiceover: "Upload PDFs, attach them to students or lessons, and open them in the built-in score viewer — from any device, no printer needed.",
     accent: "from-teal-500/20 to-teal-500/5",
     visual: FilesVisual,
   },
@@ -471,7 +471,7 @@ const SLIDES: Slide[] = [
     id: 9,
     title: "Parent Portal",
     subtitle: "Parents stay informed, you stay focused",
-    voiceover: "Every parent gets their own private portal where they can see their child's lesson notes, homework, attendance, and progress — without having to contact you. No more late-night messages asking what was covered. Parents feel connected. You get your evenings back.",
+    voiceover: "Every parent gets a private portal with lesson notes, homework, and progress. No more late-night messages. Parents feel connected — you get your evenings back.",
     accent: "from-indigo-500/20 to-indigo-500/5",
     visual: ParentPortalVisual,
   },
@@ -479,7 +479,7 @@ const SLIDES: Slide[] = [
     id: 10,
     title: "The Payoff",
     subtitle: "More music. Less admin. Finally.",
-    voiceover: "This is what StudioFlow gives you. Not just a tool — a transformation. From chaos to clarity. From scattered notes to a studio that runs itself. You became a teacher because you love music. StudioFlow makes sure that's where your energy stays. Join the teachers who are already teaching more and stressing less.",
+    voiceover: "From chaos to clarity — students, lessons, parents, and files all in one place. You became a teacher because you love music. StudioFlow keeps it that way.",
     accent: "from-primary/20 to-primary/5",
     visual: PayoffVisual,
   },
@@ -705,7 +705,7 @@ export function GuidedTour() {
                         <p className="text-[11px] font-semibold text-foreground">
                           {playing ? "▶ Playing narration…" : "Listen to narration"}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">AI voiceover · ~30s</p>
+                        <p className="text-[10px] text-muted-foreground">AI voiceover · ~15s</p>
                       </div>
                       <button
                         onClick={toggleMute}
@@ -714,7 +714,7 @@ export function GuidedTour() {
                         {muted ? <VolumeX className="h-3 w-3 text-muted-foreground" /> : <Volume2 className="h-3 w-3 text-foreground" />}
                       </button>
                     </div>
-                    <p className="text-xs sm:text-sm leading-relaxed text-foreground/70 line-clamp-4 sm:line-clamp-6">{slide.voiceover}</p>
+                    <p className="text-xs sm:text-sm leading-relaxed text-foreground/80 italic">{slide.voiceover}</p>
                   </div>
 
                   {/* Auto-advance toggle — desktop only */}
