@@ -504,6 +504,9 @@ export default function SalesPage() {
         </div>
       </section>
 
+      {/* Guided Tour with voiceover — moved high for visibility */}
+      <GuidedTour />
+
       {/* Pain points */}
       <section className="bg-muted/40 px-6 py-16">
         <div className="mx-auto max-w-2xl text-center">
@@ -524,9 +527,6 @@ export default function SalesPage() {
           </p>
         </div>
       </section>
-
-      {/* Guided Tour with voiceover */}
-      <GuidedTour />
 
       {/* Interactive mockup */}
       <section className="px-6 py-20">

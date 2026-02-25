@@ -609,23 +609,23 @@ export function GuidedTour() {
   const Visual = slide.visual;
 
   return (
-    <section className="px-6 py-20 bg-gradient-to-b from-background to-muted/30">
+    <section className="px-4 sm:px-6 py-12 sm:py-16 bg-gradient-to-b from-background to-muted/30" id="guided-tour">
       <div className="mx-auto max-w-5xl">
 
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-4">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-3">
             <Play className="h-3.5 w-3.5" />
-            Guided Tour — with voiceover
+            Interactive Tour — with voiceover
           </div>
-          <h2 className="text-3xl font-bold mb-3">See exactly what StudioFlow does</h2>
-          <p className="text-muted-foreground">Press play on any slide to hear the full story. Or click through at your own pace.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2">See exactly what StudioFlow does</h2>
+          <p className="text-muted-foreground text-sm sm:text-base">Press play to hear the story. Or tap through at your own pace.</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
 
-          {/* Slide nav (left) */}
-          <div className="hidden lg:flex flex-col gap-1 w-44 shrink-0">
+          {/* Slide nav — desktop left sidebar */}
+          <div className="hidden lg:flex flex-col gap-1 w-44 shrink-0 sticky top-4">
             {SLIDES.map((s, i) => (
               <button
                 key={s.id}
@@ -645,117 +645,137 @@ export function GuidedTour() {
           </div>
 
           {/* Main slide */}
-          <div className="flex-1 min-w-0">
-            {/* Progress bar */}
-            <div className="flex gap-1 mb-4">
+          <div className="flex-1 min-w-0 w-full">
+
+            {/* Progress dots — mobile */}
+            <div className="flex gap-1 mb-3 lg:mb-4">
               {SLIDES.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => goTo(i)}
-                  className={`h-1 rounded-full flex-1 transition-all ${i === current ? "bg-primary" : i < current ? "bg-primary/40" : "bg-muted"}`}
+                  className={`h-1.5 rounded-full flex-1 transition-all ${i === current ? "bg-primary" : i < current ? "bg-primary/40" : "bg-muted"}`}
                 />
               ))}
             </div>
 
             {/* Slide card */}
-            <div className={`rounded-2xl border bg-gradient-to-br ${slide.accent} shadow-lg overflow-hidden`}>
-              {/* Fake browser bar */}
-              <div className="flex items-center gap-1.5 border-b bg-background/60 backdrop-blur px-4 py-2.5">
+            <div className={`rounded-2xl border bg-gradient-to-br ${slide.accent} shadow-xl overflow-hidden`}>
+
+              {/* Fake browser chrome */}
+              <div className="flex items-center gap-1.5 border-b bg-background/80 backdrop-blur-sm px-3 sm:px-4 py-2.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
                 <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
                 <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-                <span className="ml-3 flex-1 rounded bg-background/80 px-3 py-1 text-[10px] text-muted-foreground">
+                <span className="ml-2 flex-1 rounded-md bg-background/80 px-3 py-1 text-[10px] text-muted-foreground truncate border border-border/40">
                   studioflow.app — {slide.title}
                 </span>
-                <span className="text-[9px] text-muted-foreground font-medium">{current + 1} / {SLIDES.length}</span>
+                <span className="text-[9px] text-muted-foreground font-medium ml-2 shrink-0">{current + 1}/{SLIDES.length}</span>
               </div>
 
-              <div className="p-6">
-                {/* Slide headline */}
-                <div className="mb-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Slide {slide.id} of {SLIDES.length}</p>
-                  <h3 className="text-2xl font-bold">{slide.title}</h3>
-                  <p className="text-muted-foreground mt-0.5">{slide.subtitle}</p>
-                </div>
+              {/* Two-column layout on larger screens, stacked on mobile */}
+              <div className="flex flex-col sm:flex-row sm:divide-x divide-border/40">
 
-                {/* Visual */}
-                <div className="animate-fade-in">
-                  <Visual />
-                </div>
+                {/* Left: headline + narration */}
+                <div className="sm:w-[38%] shrink-0 p-4 sm:p-5 flex flex-col gap-4 bg-background/30 backdrop-blur-sm">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      {slide.id} of {SLIDES.length}
+                    </p>
+                    <h3 className="text-xl sm:text-2xl font-bold leading-tight">{slide.title}</h3>
+                    <p className="text-muted-foreground text-sm mt-1">{slide.subtitle}</p>
+                  </div>
 
-                {/* Narration card */}
-                <div className="mt-5 rounded-xl border border-border/60 bg-background/70 backdrop-blur p-4">
-                  <div className="flex items-start gap-3">
-                    <button
-                      onClick={handlePlayPause}
-                      disabled={loadingAudio}
-                      className="shrink-0 mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-all disabled:opacity-60"
-                    >
-                      {loadingAudio ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : playing ? (
-                        <Pause className="h-4 w-4" />
-                      ) : (
-                        <Play className="h-4 w-4 ml-0.5" />
-                      )}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                        {playing ? "▶ Narration playing…" : "Narration"}
-                      </p>
-                      <p className="text-sm leading-relaxed text-foreground/80 line-clamp-3">{slide.voiceover}</p>
+                  {/* Narration + play button */}
+                  <div className="rounded-xl border border-border/50 bg-background/60 backdrop-blur p-3 sm:p-4 flex-1 flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handlePlayPause}
+                        disabled={loadingAudio}
+                        className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 hover:scale-105 transition-all disabled:opacity-60"
+                      >
+                        {loadingAudio ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : playing ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4 ml-0.5" />
+                        )}
+                      </button>
+                      <div>
+                        <p className="text-[11px] font-semibold text-foreground">
+                          {playing ? "▶ Playing narration…" : "Listen to narration"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">AI voiceover · ~30s</p>
+                      </div>
+                      <button
+                        onClick={toggleMute}
+                        className="ml-auto flex h-7 w-7 items-center justify-center rounded-full border bg-background/80 hover:bg-muted transition-colors"
+                      >
+                        {muted ? <VolumeX className="h-3 w-3 text-muted-foreground" /> : <Volume2 className="h-3 w-3 text-foreground" />}
+                      </button>
                     </div>
+                    <p className="text-xs sm:text-sm leading-relaxed text-foreground/70 line-clamp-4 sm:line-clamp-6">{slide.voiceover}</p>
+                  </div>
+
+                  {/* Auto-advance toggle — desktop only */}
+                  <button
+                    onClick={() => setAutoAdvance(a => !a)}
+                    className={`hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all border w-full justify-center ${autoAdvance ? "bg-primary/10 text-primary border-primary/30" : "bg-background/50 text-muted-foreground border-border"}`}
+                  >
+                    <span className={`h-2 w-2 rounded-full ${autoAdvance ? "bg-primary" : "bg-muted-foreground/40"}`} />
+                    Auto-advance {autoAdvance ? "on" : "off"}
+                  </button>
+                </div>
+
+                {/* Right: visual mockup */}
+                <div className="flex-1 p-4 sm:p-5 overflow-auto max-h-[420px] sm:max-h-[480px]">
+                  <div className="animate-fade-in">
+                    <Visual />
                   </div>
                 </div>
+
               </div>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center justify-between mt-4">
+            {/* Controls bar */}
+            <div className="flex items-center justify-between mt-3 gap-2">
               <button
                 onClick={prev}
                 disabled={current === 0}
-                className="flex items-center gap-1.5 rounded-xl border bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none shadow-sm"
+                className="flex items-center gap-1.5 rounded-xl border bg-background px-3 sm:px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none shadow-sm"
               >
-                <SkipBack className="h-4 w-4" /> Previous
+                <SkipBack className="h-4 w-4" />
+                <span className="hidden sm:inline">Previous</span>
               </button>
 
-              <div className="flex items-center gap-3">
-                {/* Auto-advance toggle */}
-                <button
-                  onClick={() => setAutoAdvance(a => !a)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all border ${autoAdvance ? "bg-primary/10 text-primary border-primary/30" : "bg-background text-muted-foreground border-border"}`}
-                >
-                  Auto-advance {autoAdvance ? "on" : "off"}
-                </button>
-
-                {/* Mute */}
-                <button
-                  onClick={toggleMute}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors shadow-sm"
-                >
-                  {muted ? <VolumeX className="h-3.5 w-3.5 text-muted-foreground" /> : <Volume2 className="h-3.5 w-3.5 text-foreground" />}
-                </button>
-              </div>
+              {/* Auto-advance — mobile only */}
+              <button
+                onClick={() => setAutoAdvance(a => !a)}
+                className={`flex sm:hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all border ${autoAdvance ? "bg-primary/10 text-primary border-primary/30" : "bg-background text-muted-foreground border-border"}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${autoAdvance ? "bg-primary" : "bg-muted-foreground/40"}`} />
+                Auto
+              </button>
 
               {current < SLIDES.length - 1 ? (
                 <button
                   onClick={next}
-                  className="flex items-center gap-1.5 rounded-xl border bg-background px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors shadow-sm"
+                  className="flex items-center gap-1.5 rounded-xl border bg-background px-3 sm:px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors shadow-sm"
                 >
-                  Next <SkipForward className="h-4 w-4" />
+                  <span className="hidden sm:inline">Next</span>
+                  <SkipForward className="h-4 w-4" />
                 </button>
               ) : (
                 <a href="#waitlist">
-                  <Button size="sm" className="px-5 font-semibold shadow">
+                  <Button size="sm" className="px-4 sm:px-5 font-semibold shadow">
                     Get Early Access →
                   </Button>
                 </a>
               )}
             </div>
 
-            {/* Mobile slide nav */}
-            <div className="flex gap-1.5 mt-4 overflow-x-auto pb-1 lg:hidden">
+            {/* Mobile slide nav — horizontal scroll chips */}
+            <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1 lg:hidden scrollbar-none">
               {SLIDES.map((s, i) => (
                 <button
                   key={s.id}
