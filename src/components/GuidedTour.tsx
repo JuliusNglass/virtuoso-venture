@@ -492,7 +492,7 @@ export function GuidedTour() {
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [loadingAudio, setLoadingAudio] = useState(false);
-  const [transitioning, setTransitioning] = useState(false);
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCache = useRef<Record<number, string>>({});
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -552,13 +552,9 @@ export function GuidedTour() {
         if (slideIndex < SLIDES.length - 1) {
           autoTimer.current = setTimeout(() => {
             const next = slideIndex + 1;
-            setTransitioning(true);
-            setTimeout(() => {
-              setCurrent(next);
-              setTransitioning(false);
-              fetchAndPlay(next);
-            }, 220);
-          }, 600);
+            setCurrent(next);
+            fetchAndPlay(next);
+          }, 300);
         }
       };
 
@@ -587,11 +583,7 @@ export function GuidedTour() {
 
   const goTo = useCallback((index: number) => {
     stopAudio();
-    setTransitioning(true);
-    setTimeout(() => {
-      setCurrent(index);
-      setTransitioning(false);
-    }, 220);
+    setCurrent(index);
   }, [stopAudio]);
 
   const prev = () => { if (current > 0) goTo(current - 1); };
@@ -673,10 +665,7 @@ export function GuidedTour() {
           </div>
 
           {/* Slide header — full width, prominent */}
-          <div
-            className="px-5 pt-5 pb-3 bg-background/40 backdrop-blur-sm border-b border-border/30 transition-all duration-300"
-            style={{ opacity: transitioning ? 0 : 1, transform: transitioning ? "translateY(8px)" : "translateY(0)" }}
-          >
+          <div className="px-5 pt-5 pb-3 bg-background/40 backdrop-blur-sm border-b border-border/30">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">
@@ -745,8 +734,7 @@ export function GuidedTour() {
           {/* Visual mockup area */}
           <div className="p-4 sm:p-6 overflow-auto max-h-[380px] sm:max-h-[440px] bg-background/20">
             <div
-              className="transition-all duration-300"
-              style={{ opacity: transitioning ? 0 : 1, transform: transitioning ? "translateY(12px)" : "translateY(0)" }}
+              className=""
             >
               <Visual />
             </div>
