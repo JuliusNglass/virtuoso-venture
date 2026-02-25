@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { query, action, url, title } = await req.json();
+    const { query, action, url, title, fileUrl } = await req.json();
 
     // Suggest action: fast prefix-based opensearch for autocomplete
     if (action === "suggest") {
@@ -37,7 +37,6 @@ serve(async (req) => {
 
       const searchResults = data?.query?.search || [];
 
-      // Resolve redirects: check which pages are redirects and get their targets
       const titles = searchResults.map((r: any) => r.title).join("|");
       let redirectMap: Record<string, string> = {};
 
@@ -53,7 +52,6 @@ serve(async (req) => {
         }
       }
 
-      // Deduplicate: track resolved titles to avoid showing duplicates
       const seen = new Set<string>();
       const results: any[] = [];
 
@@ -79,35 +77,73 @@ serve(async (req) => {
       });
     }
 
-    // Import action: try to find and download a PDF from the IMSLP page
-    if (action === "import" && url) {
-      // Fetch the IMSLP page to find PDF links
+    // Browse action: fetch IMSLP page and return list of available PDF editions
+    if (action === "browse" && url) {
       const pageRes = await fetch(url, {
         headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
       });
       const html = await pageRes.text();
 
-      // Look for PDF file links on the page (IMSLP uses //imslp.org/wiki/Special:IMSLPDisclaimerAccept/ pattern)
+      // Extract all disclaimer-accept PDF links and their nearby labels
+      const editions: { label: string; url: string }[] = [];
+      
+      // Match blocks: find all IMSLPDisclaimerAccept links
       const pdfPattern = /href="((?:https?:)?\/\/imslp\.org\/wiki\/Special:IMSLPDisclaimerAccept\/[^"]+\.pdf[^"]*)"/gi;
       const matches = [...html.matchAll(pdfPattern)];
 
-      if (matches.length === 0) {
-        // Try alternate pattern for direct file links
-        const altPattern = /href="((?:https?:)?\/\/[^"]*\.imslp\.[^"]*\.pdf[^"]*)"/gi;
-        const altMatches = [...html.matchAll(altPattern)];
-        if (altMatches.length === 0) {
-          return new Response(JSON.stringify({ success: false, reason: "no_pdf_found" }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+      // Also try to extract surrounding context (arranger/editor names)
+      // We'll look for table rows containing PDF links to grab labels
+      // Simple approach: for each PDF, look backwards ~500 chars for a label pattern
+      const usedUrls = new Set<string>();
+
+      for (const match of matches) {
+        let pdfUrl = match[1];
+        if (pdfUrl.startsWith("//")) pdfUrl = "https:" + pdfUrl;
+        
+        if (usedUrls.has(pdfUrl)) continue;
+        usedUrls.add(pdfUrl);
+
+        // Try to extract a label from the surrounding HTML (editor/arranger row)
+        const pos = match.index ?? 0;
+        const surrounding = html.substring(Math.max(0, pos - 800), pos + 200);
+        
+        // Look for editor/arranger/title patterns in the surrounding text
+        let label = "";
+        
+        // Try to find "Editor" field
+        const editorMatch = surrounding.match(/Editor\s*<\/[^>]+>\s*<[^>]+>([^<]{3,60})</i);
+        if (editorMatch) label = `Ed. ${editorMatch[1].trim()}`;
+        
+        // Try to find file description label
+        if (!label) {
+          const descMatch = surrounding.match(/title="([^"]{5,80})"\s*(?:class="[^"]*")?[^>]*>\s*(?:PDF|score)/i);
+          if (descMatch) label = descMatch[1].trim();
         }
+
+        // Try to find arranger
+        if (!label) {
+          const arrangMatch = surrounding.match(/Arranger\s*<\/[^>]+>\s*<[^>]+>([^<]{3,60})</i);
+          if (arrangMatch) label = `Arr. ${arrangMatch[1].trim()}`;
+        }
+
+        // Fallback: extract filename from URL
+        if (!label) {
+          const urlParts = pdfUrl.split("/");
+          const filename = decodeURIComponent(urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2] || "");
+          label = filename.replace(/\.pdf$/i, "").replace(/_/g, " ").substring(0, 80) || `Score ${editions.length + 1}`;
+        }
+
+        editions.push({ label, url: pdfUrl });
       }
 
-      // Get the first PDF link
-      let pdfUrl = matches[0]?.[1] || "";
-      if (pdfUrl.startsWith("//")) pdfUrl = "https:" + pdfUrl;
+      return new Response(JSON.stringify({ editions }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      // Download the PDF
-      const pdfRes = await fetch(pdfUrl, {
+    // Import action: download a specific PDF by URL and save it
+    if (action === "import" && fileUrl) {
+      const pdfRes = await fetch(fileUrl, {
         headers: { "User-Agent": "VirtuosoStudio/1.0 (Music Teaching App)" },
         redirect: "follow",
       });
@@ -122,7 +158,6 @@ serve(async (req) => {
       const safeName = (title || "score").replace(/[^a-zA-Z0-9_\-\s]/g, "").trim();
       const filePath = `music_sheet/${Date.now()}-${safeName}.pdf`;
 
-      // Upload to storage
       const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       const supabase = createClient(supabaseUrl, serviceKey);
@@ -133,7 +168,6 @@ serve(async (req) => {
 
       if (uploadError) throw uploadError;
 
-      // Create file record
       const authHeader = req.headers.get("authorization");
       let userId: string | null = null;
       if (authHeader) {
