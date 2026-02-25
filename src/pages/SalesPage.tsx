@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GuidedTour } from "@/components/GuidedTour";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -523,6 +524,9 @@ export default function SalesPage() {
           </p>
         </div>
       </section>
+
+      {/* Guided Tour with voiceover */}
+      <GuidedTour />
 
       {/* Interactive mockup */}
       <section className="px-6 py-20">
