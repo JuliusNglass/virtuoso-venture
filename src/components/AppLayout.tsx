@@ -1,11 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Users, BookOpen, Calendar, Music, 
-  FileText, UserPlus, Menu, X, LogOut, LogIn, Bell,
-  TrendingUp, MessageSquare, Globe, DollarSign, GraduationCap,
-  MoreHorizontal
+  FileText, UserPlus, Menu, X, LogOut, Bell,
+  MoreHorizontal, ChevronDown
 } from "lucide-react";
-import conservoLogo from "@/assets/conservo-logo.png";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
@@ -14,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
@@ -26,7 +25,7 @@ const mainNav = [
 
 const moreNav = [
   { path: "/repertoire", label: "Music Library", icon: Music },
-  { path: "/files", label: "Files", icon: FileText },
+  { path: "/files", label: "Files & Scores", icon: FileText },
   { path: "/requests", label: "Applications", icon: UserPlus },
 ];
 
@@ -42,24 +41,32 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     navigate("/");
   };
 
-  const allNav = [...mainNav, ...moreNav];
+  const initials = studio?.name
+    ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "C";
+
+  const isMoreActive = moreNav.some(n => location.pathname === n.path);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+
+      {/* ── Header ── */}
+      <header className="sticky top-0 z-50 border-b border-border/60" style={{ background: "hsl(var(--card) / 0.92)", backdropFilter: "blur(16px)" }}>
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
+
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-              <img src="/conservo-logo.png" alt="Conservo" className="w-9 h-9 rounded-lg object-cover" />
-              <span className="font-heading text-lg font-bold hidden sm:block">
+            <Link to="/dashboard" className="flex items-center gap-2.5 shrink-0 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-gold flex items-center justify-center shadow-gold">
+                <span className="text-charcoal font-heading font-bold text-base">🎵</span>
+              </div>
+              <span className="font-heading text-lg font-bold hidden sm:block tracking-tight">
                 {studio?.name ?? "Conservo"}
               </span>
             </Link>
 
             {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-0.5">
               {mainNav.map(({ path, label, icon: Icon }) => {
                 const isActive = location.pathname === path;
                 return (
@@ -67,35 +74,37 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                     key={path}
                     to={path}
                     className={`
-                      flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                      ${isActive 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                      ${isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }
                     `}
                   >
-                    <Icon size={16} />
+                    <Icon size={15} />
                     {label}
                   </Link>
                 );
               })}
 
-              {/* More Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
-                    text-muted-foreground hover:text-foreground hover:bg-muted
-                    ${moreNav.some(n => location.pathname === n.path) ? 'bg-primary text-primary-foreground' : ''}
+                    flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                    ${isMoreActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }
                   `}>
-                    <MoreHorizontal size={16} />
+                    <MoreHorizontal size={15} />
                     More
+                    <ChevronDown size={13} className="opacity-60" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-52 shadow-lg">
                   {moreNav.map(({ path, label, icon: Icon }) => (
-                    <DropdownMenuItem key={path} onClick={() => navigate(path)} className="cursor-pointer">
-                      <Icon size={16} className="mr-2" />
+                    <DropdownMenuItem key={path} onClick={() => navigate(path)} className="cursor-pointer gap-2.5 py-2.5">
+                      <Icon size={15} className="text-muted-foreground" />
                       {label}
                     </DropdownMenuItem>
                   ))}
@@ -104,36 +113,36 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </nav>
 
             {/* Right side */}
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell size={18} />
+            <div className="flex items-center gap-1.5">
+              <Button variant="ghost" size="icon" className="relative w-9 h-9 rounded-xl">
+                <Bell size={17} />
               </Button>
-              
-              {user ? (
+
+              {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="w-9 h-9 rounded-full bg-gradient-gold flex items-center justify-center text-charcoal font-bold text-sm">
-                      S
+                    <button className="w-9 h-9 rounded-xl bg-gradient-gold flex items-center justify-center text-charcoal font-bold text-sm shadow-gold hover:shadow-gold-lg transition-shadow">
+                      {initials}
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                      <LogOut size={16} className="mr-2" /> Sign Out
+                  <DropdownMenuContent align="end" className="w-52 shadow-lg">
+                    <div className="px-3 py-2.5 border-b border-border/60">
+                      <p className="text-sm font-semibold truncate">{studio?.name ?? "My Studio"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer gap-2.5 py-2.5 text-destructive focus:text-destructive">
+                      <LogOut size={15} /> Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              ) : (
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
-                  <LogIn size={16} className="mr-2" /> Sign In
-                </Button>
               )}
 
-              {/* Mobile hamburger */}
-              <button 
-                onClick={() => setMobileOpen(!mobileOpen)} 
-                className="lg:hidden text-foreground ml-1"
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="lg:hidden w-9 h-9 rounded-xl flex items-center justify-center text-foreground hover:bg-muted transition-colors ml-1"
               >
-                {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+                {mobileOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
           </div>
@@ -141,8 +150,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Mobile Nav */}
         {mobileOpen && (
-          <div className="lg:hidden border-t border-border bg-card px-4 py-3 space-y-1">
-            {allNav.map(({ path, label, icon: Icon }) => {
+          <div className="lg:hidden border-t border-border/60 bg-card px-4 py-3 space-y-1 animate-slide-up">
+            {[...mainNav, ...moreNav].map(({ path, label, icon: Icon }) => {
               const isActive = location.pathname === path;
               return (
                 <Link
@@ -150,10 +159,10 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                   to={path}
                   onClick={() => setMobileOpen(false)}
                   className={`
-                    flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
-                    ${isActive 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'text-muted-foreground hover:bg-muted'
+                    flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
+                    ${isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }
                   `}
                 >
@@ -162,12 +171,20 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 </Link>
               );
             })}
+            <div className="pt-2 border-t border-border/60 mt-2">
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 w-full transition-colors"
+              >
+                <LogOut size={16} /> Sign Out
+              </button>
+            </div>
           </div>
         )}
       </header>
 
       {/* Main content */}
-      <main className="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <main className="flex-1 max-w-[1400px] mx-auto w-full px-4 sm:px-6 py-6 lg:py-8">
         {children}
       </main>
     </div>
