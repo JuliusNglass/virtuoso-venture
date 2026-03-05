@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Music,
@@ -44,6 +45,11 @@ const AppSidebar = () => {
   const { studio } = useStudio();
   const { setOpen } = useSidebar();
 
+  // Close sidebar whenever the route changes
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname, setOpen]);
+
   const initials = studio?.name
     ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
     : "C";
@@ -51,11 +57,6 @@ const AppSidebar = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
-  };
-
-  const handleNavClick = () => {
-    // Fully close (offcanvas) after navigating
-    setOpen(false);
   };
 
   return (
@@ -90,7 +91,7 @@ const AppSidebar = () => {
                     }
                   `}
                 >
-                  <Link to={path} onClick={handleNavClick} className="flex items-center gap-3 px-3 py-2.5">
+                  <Link to={path} className="flex items-center gap-3 px-3 py-2.5">
                     <Icon size={18} className="shrink-0" />
                     <span className="text-sm">{label}</span>
                   </Link>
