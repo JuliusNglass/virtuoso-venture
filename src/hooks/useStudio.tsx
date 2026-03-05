@@ -48,7 +48,7 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchStudio();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, role]);
+  }, [user?.id]);
 
   return (
     <StudioContext.Provider value={{ studio, loading, refetch: fetchStudio }}>
