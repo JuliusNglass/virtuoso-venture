@@ -42,10 +42,10 @@ const App = () => (
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/parent" element={<ParentPortal />} />
               {/* Parent portal sub-routes */}
-              <Route path="/p/home" element={<ParentPortal initialTab={"home" as any} />} />
-              <Route path="/p/homework" element={<ParentPortal initialTab={"homework" as any} />} />
-              <Route path="/p/files" element={<ParentPortal initialTab={"files" as any} />} />
-              <Route path="/p/messages" element={<ParentPortal initialTab={"messages" as any} />} />
+              <Route path="/p/home" element={<ParentPortal initialTab="home" />} />
+              <Route path="/p/homework" element={<ParentPortal initialTab="homework" />} />
+              <Route path="/p/files" element={<ParentPortal initialTab="files" />} />
+              <Route path="/p/messages" element={<ParentPortal initialTab="messages" />} />
               <Route path="/request-lesson" element={<LessonRequest />} />
               <Route path="/requests" element={<AppLayout><AdminRequests /></AppLayout>} />
               <Route path="/today" element={<AppLayout><Today /></AppLayout>} />
