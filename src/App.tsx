@@ -18,6 +18,7 @@ import LessonRequest from "./pages/LessonRequest";
 import AdminRequests from "./pages/AdminRequests";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
+import Messages from "./pages/Messages";
 import AppLayout from "./components/AppLayout";
 import VersionChecker from "./components/VersionChecker";
 
