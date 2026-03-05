@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   PlayCircle, MessageCircle, Calendar, CheckCircle2,
-  XCircle, Clock, Send, AlertCircle, Zap
+  XCircle, Clock, Send, AlertCircle, Zap, ChevronRight
 } from "lucide-react";
 import LessonMode from "@/components/LessonMode";
 
@@ -19,6 +19,8 @@ const Today = () => {
   const [existingLesson, setExistingLesson] = useState<any>(null);
   const [filterChip, setFilterChip] = useState<"all" | "needs_recap" | "overdue">("all");
 
+  const next7Str = addDays(new Date(), 7).toISOString().split("T")[0];
+
   const { data: todayLessons, isLoading } = useQuery({
     queryKey: ["today-lessons", todayStr],
     queryFn: async () => {
@@ -27,6 +29,20 @@ const Today = () => {
         .select("*, students(id, name, level, lesson_time, parent_email, parent_user_id, status)")
         .eq("date", todayStr)
         .order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: upcomingLessons } = useQuery({
+    queryKey: ["coming-up-lessons", todayStr],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lessons")
+        .select("*, students(id, name, lesson_time)")
+        .gt("date", todayStr)
+        .lte("date", next7Str)
+        .order("date", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
@@ -291,6 +307,55 @@ const Today = () => {
           </Button>
         </div>
       )}
+
+      {/* Coming Up — next 7 days */}
+      <section className="space-y-3">
+        <h2 className="font-heading text-lg font-bold flex items-center gap-2">
+          <ChevronRight size={18} className="text-muted-foreground" /> Coming Up
+        </h2>
+        {!upcomingLessons || upcomingLessons.length === 0 ? (
+          <Card className="border-border/40">
+            <CardContent className="py-8 text-center">
+              <Calendar size={28} className="text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm font-medium text-muted-foreground">No pre-scheduled lessons found</p>
+              <p className="text-xs text-muted-foreground mt-1">Use the Calendar to add upcoming slots.</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/calendar")}>
+                Open Calendar
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {upcomingLessons.map((lesson) => {
+              const s = (lesson as any).students;
+              return (
+                <Card key={lesson.id} className="border-border/40">
+                  <CardContent className="p-3.5 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-sm">{s?.name ?? "Student"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(lesson.date), "EEEE, d MMM")}
+                        {s?.lesson_time && ` · ${s.lesson_time}`}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs shrink-0"
+                      onClick={() => {
+                        setLessonModeStudent({ id: s.id, name: s.name, level: s.level, parent_email: s.parent_email });
+                        setExistingLesson(lesson);
+                      }}
+                    >
+                      <PlayCircle size={13} className="mr-1" /> Start
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Lesson Mode */}
       {lessonModeStudent && (

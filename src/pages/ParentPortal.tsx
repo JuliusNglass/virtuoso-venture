@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import UpcomingLessons from "@/components/UpcomingLessons";
 
 type Tab = "home" | "homework" | "files" | "messages";
 
@@ -356,6 +357,9 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Upcoming lessons */}
+                <UpcomingLessons studentId={selectedStudentId!} />
 
                 {/* Practice logger */}
                 <Card className="border-border/50">
