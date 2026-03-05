@@ -42,6 +42,7 @@ const Students = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [editStudent, setEditStudent] = useState<any>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [lessonModeStudent, setLessonModeStudent] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
