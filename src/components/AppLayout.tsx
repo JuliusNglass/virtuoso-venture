@@ -102,7 +102,7 @@ const AppSidebar = () => {
                           }
                         `}
                       >
-                        <Link to={path} className="flex items-center gap-3 px-3 py-2.5">
+                        <Link to={path} onClick={handleNavClick} className="flex items-center gap-3 px-3 py-2.5">
                           <Icon size={18} className="shrink-0" />
                           {!collapsed && <span className="text-sm">{label}</span>}
                         </Link>
