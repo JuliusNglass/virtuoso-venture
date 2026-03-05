@@ -23,12 +23,12 @@ const StudioContext = createContext<StudioContextType>({
 });
 
 export const StudioProvider = ({ children }: { children: ReactNode }) => {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const [studio, setStudio] = useState<Studio | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStudio = async () => {
-    if (!user || role !== "admin") {
+    if (!user) {
       setStudio(null);
       setLoading(false);
       return;
@@ -38,6 +38,8 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
       .from("studios")
       .select("*")
       .eq("owner_user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
       .maybeSingle();
     setStudio(data ?? null);
     setLoading(false);
@@ -46,7 +48,7 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchStudio();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, role]);
+  }, [user?.id]);
 
   return (
     <StudioContext.Provider value={{ studio, loading, refetch: fetchStudio }}>
