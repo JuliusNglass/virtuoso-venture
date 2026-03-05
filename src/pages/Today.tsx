@@ -19,6 +19,8 @@ const Today = () => {
   const [existingLesson, setExistingLesson] = useState<any>(null);
   const [filterChip, setFilterChip] = useState<"all" | "needs_recap" | "overdue">("all");
 
+  const next7Str = addDays(new Date(), 7).toISOString().split("T")[0];
+
   const { data: todayLessons, isLoading } = useQuery({
     queryKey: ["today-lessons", todayStr],
     queryFn: async () => {
@@ -27,6 +29,20 @@ const Today = () => {
         .select("*, students(id, name, level, lesson_time, parent_email, parent_user_id, status)")
         .eq("date", todayStr)
         .order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: upcomingLessons } = useQuery({
+    queryKey: ["coming-up-lessons", todayStr],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lessons")
+        .select("*, students(id, name, lesson_time)")
+        .gt("date", todayStr)
+        .lte("date", next7Str)
+        .order("date", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
