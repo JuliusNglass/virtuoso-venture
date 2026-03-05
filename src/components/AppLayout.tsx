@@ -49,8 +49,12 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { studio } = useStudio();
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const collapsed = state === "collapsed";
+
+  const handleNavClick = () => {
+    setOpen(false);
+  };
 
   const initials = studio?.name
     ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
