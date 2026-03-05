@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Edit, Trash2, Phone, Mail, Calendar, UserPlus } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import LessonMode from "@/components/LessonMode";
 
 const levelColors: Record<string, string> = {
   "Grade 1": "bg-green-100 text-green-700",
@@ -41,6 +42,7 @@ const Students = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [editStudent, setEditStudent] = useState<any>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [lessonModeStudent, setLessonModeStudent] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -229,6 +231,11 @@ const Students = () => {
                     )}
 
                     <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
+                      {student.status === "active" && (
+                        <Button size="sm" className="flex-1 h-8 text-xs bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold" onClick={() => setLessonModeStudent(student)}>
+                          <PlayCircle size={12} className="mr-1" /> Start Lesson
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs" onClick={() => setEditStudent(student)}>
                         <Edit size={12} className="mr-1" /> Edit
                       </Button>
@@ -431,6 +438,15 @@ const Students = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Lesson Mode */}
+      {lessonModeStudent && (
+        <LessonMode
+          open={!!lessonModeStudent}
+          onClose={() => setLessonModeStudent(null)}
+          student={lessonModeStudent}
+        />
+      )}
     </div>
   );
 };

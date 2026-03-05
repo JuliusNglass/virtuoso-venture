@@ -68,6 +68,67 @@ export type Database = {
           },
         ]
       }
+      homework_assignments: {
+        Row: {
+          created_at: string
+          due_date: string | null
+          id: string
+          items: Json
+          lesson_id: string | null
+          status: string
+          student_id: string
+          studio_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          items?: Json
+          lesson_id?: string | null
+          status?: string
+          student_id: string
+          studio_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          items?: Json
+          lesson_id?: string | null
+          status?: string
+          student_id?: string
+          studio_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_assignments_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           created_at: string
@@ -204,6 +265,132 @@ export type Database = {
           },
         ]
       }
+      message_threads: {
+        Row: {
+          created_at: string
+          id: string
+          student_id: string
+          studio_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          student_id: string
+          studio_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          student_id?: string
+          studio_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_threads_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_threads_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_user_id: string
+          studio_id: string | null
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_user_id: string
+          studio_id?: string | null
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_user_id?: string
+          studio_id?: string | null
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_logs: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          id: string
+          logged_by: string | null
+          notes: string | null
+          practice_date: string
+          student_id: string
+          studio_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          logged_by?: string | null
+          notes?: string | null
+          practice_date?: string
+          student_id: string
+          studio_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          logged_by?: string | null
+          notes?: string | null
+          practice_date?: string
+          student_id?: string
+          studio_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_logs_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -230,6 +417,67 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recap_messages: {
+        Row: {
+          body_html: string
+          created_at: string
+          email_to: string | null
+          id: string
+          lesson_id: string | null
+          sent_by_user_id: string | null
+          status: string
+          student_id: string | null
+          studio_id: string | null
+          subject: string
+        }
+        Insert: {
+          body_html?: string
+          created_at?: string
+          email_to?: string | null
+          id?: string
+          lesson_id?: string | null
+          sent_by_user_id?: string | null
+          status?: string
+          student_id?: string | null
+          studio_id?: string | null
+          subject?: string
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          email_to?: string | null
+          id?: string
+          lesson_id?: string | null
+          sent_by_user_id?: string | null
+          status?: string
+          student_id?: string | null
+          studio_id?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recap_messages_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recap_messages_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recap_messages_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       score_annotations: {
         Row: {
