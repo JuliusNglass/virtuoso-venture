@@ -358,6 +358,9 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
                   </Card>
                 )}
 
+                {/* Upcoming lessons */}
+                <UpcomingLessons studentId={selectedStudentId!} />
+
                 {/* Practice logger */}
                 <Card className="border-border/50">
                   <CardHeader className="pb-2 pt-4 px-4">
