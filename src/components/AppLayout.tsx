@@ -29,7 +29,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { path: "/dashboard",  label: "Dashboard",      icon: LayoutDashboard },
+  { path: "/today",      label: "Today",           icon: Sun },
+  { path: "/dashboard",  label: "Dashboard",       icon: LayoutDashboard },
   { path: "/students",   label: "Students",        icon: Users },
   { path: "/lessons",    label: "Lessons",         icon: BookOpen },
   { path: "/calendar",   label: "Calendar",        icon: Calendar },
@@ -37,6 +38,8 @@ const navItems = [
   { path: "/repertoire", label: "Music Library",   icon: Music },
   { path: "/files",      label: "Files & Scores",  icon: FileText },
   { path: "/requests",   label: "Applications",    icon: UserPlus },
+  { path: "/payments",   label: "Payments",        icon: CreditCard },
+  { path: "/settings",   label: "Settings",        icon: Settings2 },
 ];
 
 const AppSidebar = () => {
