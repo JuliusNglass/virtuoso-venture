@@ -23,7 +23,7 @@ const StudioContext = createContext<StudioContextType>({
 });
 
 export const StudioProvider = ({ children }: { children: ReactNode }) => {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const [studio, setStudio] = useState<Studio | null>(null);
   const [loading, setLoading] = useState(true);
 
