@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Edit, Trash2, Phone, Mail, Calendar, UserPlus } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import LessonMode from "@/components/LessonMode";
 
 const levelColors: Record<string, string> = {
   "Grade 1": "bg-green-100 text-green-700",
