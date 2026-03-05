@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Users, BookOpen, Calendar, Music, 
   FileText, UserPlus, Menu, X, LogOut, Bell,
-  MoreHorizontal, ChevronDown
+  MoreHorizontal, ChevronDown, MessageCircle
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ const mainNav = [
   { path: "/students", label: "Students", icon: Users },
   { path: "/lessons", label: "Lessons", icon: BookOpen },
   { path: "/calendar", label: "Calendar", icon: Calendar },
+  { path: "/messages", label: "Messages", icon: MessageCircle },
 ];
 
 const moreNav = [
