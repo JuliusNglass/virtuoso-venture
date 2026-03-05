@@ -46,6 +46,7 @@ const App = () => (
               <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
               <Route path="/repertoire" element={<AppLayout><Repertoire /></AppLayout>} />
               <Route path="/files" element={<AppLayout><Files /></AppLayout>} />
+              <Route path="/messages" element={<AppLayout><Messages /></AppLayout>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
