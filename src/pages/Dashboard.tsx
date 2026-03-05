@@ -96,10 +96,16 @@ const Dashboard = () => {
   const hour = today.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-  if (!studioLoading && !studio) {
-    navigate("/onboarding");
-    return null;
-  }
+  // Redirect to onboarding only after loading settles and no studio found
+  useEffect(() => {
+    if (!studioLoading && !studio) {
+      const timer = setTimeout(() => navigate("/onboarding"), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [studioLoading, studio, navigate]);
+
+  if (studioLoading) return null;
+  if (!studio) return null;
 
   return (
     <div className="space-y-7 animate-fade-in">
