@@ -49,8 +49,12 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { studio } = useStudio();
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const collapsed = state === "collapsed";
+
+  const handleNavClick = () => {
+    setOpen(false);
+  };
 
   const initials = studio?.name
     ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -98,7 +102,7 @@ const AppSidebar = () => {
                           }
                         `}
                       >
-                        <Link to={path} className="flex items-center gap-3 px-3 py-2.5">
+                        <Link to={path} onClick={handleNavClick} className="flex items-center gap-3 px-3 py-2.5">
                           <Icon size={18} className="shrink-0" />
                           {!collapsed && <span className="text-sm">{label}</span>}
                         </Link>
