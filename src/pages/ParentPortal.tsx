@@ -16,12 +16,16 @@ import { useToast } from "@/hooks/use-toast";
 
 type Tab = "home" | "homework" | "files" | "messages";
 
-const ParentPortal = () => {
+interface ParentPortalProps {
+  initialTab?: Tab;
+}
+
+const ParentPortal = ({ initialTab }: ParentPortalProps) => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? "home");
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [practiceRunning, setPracticeRunning] = useState(false);
   const [practiceSeconds, setPracticeSeconds] = useState(0);
