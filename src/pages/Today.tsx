@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   PlayCircle, MessageCircle, Calendar, CheckCircle2,
-  XCircle, Clock, Send, AlertCircle, Zap
+  XCircle, Clock, Send, AlertCircle, Zap, ChevronRight
 } from "lucide-react";
 import LessonMode from "@/components/LessonMode";
 
