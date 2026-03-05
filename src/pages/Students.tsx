@@ -438,6 +438,15 @@ const Students = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Lesson Mode */}
+      {lessonModeStudent && (
+        <LessonMode
+          open={!!lessonModeStudent}
+          onClose={() => setLessonModeStudent(null)}
+          student={lessonModeStudent}
+        />
+      )}
     </div>
   );
 };
