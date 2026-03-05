@@ -28,7 +28,7 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchStudio = async () => {
-    if (!user || role !== "admin") {
+    if (!user) {
       setStudio(null);
       setLoading(false);
       return;
@@ -38,6 +38,8 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
       .from("studios")
       .select("*")
       .eq("owner_user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(1)
       .maybeSingle();
     setStudio(data ?? null);
     setLoading(false);
