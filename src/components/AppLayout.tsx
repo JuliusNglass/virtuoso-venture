@@ -48,13 +48,15 @@ const AppSidebar = () => {
   const { user, signOut } = useAuth();
   const { studio } = useStudio();
   const { setOpen } = useSidebar();
+  const prevPath = useRef(location.pathname);
 
-  // Close sidebar whenever the route actually changes (not on first mount)
+  // Close sidebar only when navigating to a different route (not on mount)
   useEffect(() => {
-    const handler = setTimeout(() => setOpen(false), 0);
-    return () => clearTimeout(handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+    if (prevPath.current !== location.pathname) {
+      prevPath.current = location.pathname;
+      setOpen(false);
+    }
+  }, [location.pathname, setOpen]);
 
   const initials = studio?.name
     ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
