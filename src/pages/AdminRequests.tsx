@@ -208,7 +208,7 @@ const AdminRequests = () => {
 
           {request.parent_phone && (
             <a
-              href={formatWhatsAppLink(request.parent_phone, `Hi ${request.parent_name || "there"}, this is regarding ${request.child_name}'s piano lesson request with Shanika Music Academy.`)!}
+              href={formatWhatsAppLink(request.parent_phone, `Hi ${request.parent_name || "there"}, this is regarding ${request.child_name}'s piano lesson request with ${studio?.name ?? "us"}.`)!}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors mb-3"
@@ -333,7 +333,7 @@ const AdminRequests = () => {
                     </div>
                     {student.parent_phone && (
                       <a
-                        href={formatWhatsAppLink(student.parent_phone, `Hi ${student.parent_name || "there"}, this is a reminder regarding payment for ${student.name}'s piano lessons with Shanika Music Academy.`)!}
+                        href={formatWhatsAppLink(student.parent_phone, `Hi ${student.parent_name || "there"}, this is a reminder regarding payment for ${student.name}'s piano lessons with ${studio?.name ?? "us"}.`)!}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors mb-3"
