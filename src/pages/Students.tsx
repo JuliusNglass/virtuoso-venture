@@ -434,6 +434,10 @@ const Students = () => {
               <Label>Parent Phone</Label>
               <Input value={newParentPhone} onChange={e => setNewParentPhone(e.target.value)} maxLength={20} placeholder="(555) 123-4567" />
             </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">Internal Label <span className="text-xs text-muted-foreground font-normal">(optional — helps distinguish students with same name)</span></Label>
+              <Input value={""} onChange={() => {}} maxLength={30} placeholder='e.g. "Jesse A" or "Year 4 class"' id="new-internal-label" />
+            </div>
             <Button type="submit" className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold" disabled={addMutation.isPending}>
               {addMutation.isPending ? "Adding..." : "Add Student"}
             </Button>
