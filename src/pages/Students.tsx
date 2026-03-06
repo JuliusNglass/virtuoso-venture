@@ -275,10 +275,24 @@ const Students = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
+                    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border/50">
                       {student.status === "active" && (
                         <Button size="sm" className="flex-1 h-8 text-xs bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold" onClick={() => setLessonModeStudent(student)}>
                           <PlayCircle size={12} className="mr-1" /> Start Lesson
+                        </Button>
+                      )}
+                      {student.parent_email && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 h-8 text-xs"
+                          onClick={() => {
+                            setInviteStudent(student);
+                            setInviteEmail(student.parent_email || "");
+                            setInviteLink(null);
+                          }}
+                        >
+                          <Send size={12} className="mr-1" /> Invite Parent
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs" onClick={() => setEditStudent(student)}>
