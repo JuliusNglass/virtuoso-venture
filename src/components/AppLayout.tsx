@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +36,7 @@ const navItems = [
   { path: "/lessons",    label: "Lessons",         icon: BookOpen },
   { path: "/classes",    label: "Classes",         icon: GraduationCap },
   { path: "/calendar",   label: "Calendar",        icon: Calendar },
-  { path: "/messages",   label: "Messages",        icon: MessageCircle },
+  { path: "/messages",   label: "Messages",        icon: MessageCircle, badgeKey: "messages" },
   { path: "/repertoire", label: "Music Library",   icon: Music },
   { path: "/files",      label: "Files & Scores",  icon: FileText },
   { path: "/requests",   label: "Applications",    icon: UserPlus },
