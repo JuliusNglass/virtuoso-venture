@@ -69,7 +69,7 @@ const RecapPreviewModal = ({ open, onClose, student, lessonId, notes, pieces, ho
 
       // 3. Send email via edge function
       const { data: emailResult, error: fnError } = await supabase.functions.invoke("send-recap-email", {
-        body: { to: student.parent_email, subject, bodyHtml, studentName: student.name },
+        body: { to: student.parent_email, subject, bodyHtml, studentName: student.name, replyTo: replyTo ?? undefined },
       });
 
       if (fnError) throw fnError;
