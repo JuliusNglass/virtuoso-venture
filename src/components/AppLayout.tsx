@@ -39,6 +39,7 @@ const navItems = [
   { path: "/files",      label: "Files & Scores",  icon: FileText },
   { path: "/requests",   label: "Applications",    icon: UserPlus },
   { path: "/payments",   label: "Payments",        icon: CreditCard },
+  { path: "/signups",    label: "Signups",         icon: Users2 },
   { path: "/settings",   label: "Settings",        icon: Settings2 },
 ];
 
