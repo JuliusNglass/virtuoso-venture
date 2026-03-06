@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Music,
@@ -48,10 +48,14 @@ const AppSidebar = () => {
   const { user, signOut } = useAuth();
   const { studio } = useStudio();
   const { setOpen } = useSidebar();
+  const prevPath = useRef(location.pathname);
 
-  // Close sidebar whenever the route changes
+  // Close sidebar only when navigating to a different route (not on mount)
   useEffect(() => {
-    setOpen(false);
+    if (prevPath.current !== location.pathname) {
+      prevPath.current = location.pathname;
+      setOpen(false);
+    }
   }, [location.pathname, setOpen]);
 
   const initials = studio?.name
