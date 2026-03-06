@@ -21,18 +21,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<"admin" | "parent" | null>(null);
 
   const fetchRole = async (userId: string) => {
-    const { data: roleData } = await supabase
+    // Check user_roles — fetch all rows, prefer admin
+    const { data: roleRows } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+      .eq("user_id", userId);
 
-    if (roleData?.role) {
-      setRole(roleData.role);
-      return;
-    }
+    const roles = roleRows?.map(r => r.role) ?? [];
+    if (roles.includes("admin")) { setRole("admin"); return; }
+    if (roles.includes("parent")) { setRole("parent"); return; }
 
-    // Studio owners always get admin access even without an explicit role row
+    // No role row — studio owners always get admin access
     const { data: studioData } = await supabase
       .from("studios")
       .select("id")
