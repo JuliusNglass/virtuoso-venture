@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,9 +33,9 @@ const AttendanceBtn = ({
   onChange: (v: AttendanceValue) => void;
 }) => {
   const map: Record<string, { label: string; icon: any; active: string }> = {
-    present:   { label: "Present", icon: CheckCircle2, active: "bg-emerald-500 text-white border-transparent shadow-sm" },
-    absent:    { label: "Absent",  icon: XCircle,      active: "bg-destructive text-destructive-foreground border-transparent shadow-sm" },
-    late:      { label: "Late",    icon: Clock,        active: "bg-amber-400 text-white border-transparent shadow-sm" },
+    present: { label: "Present", icon: CheckCircle2, active: "bg-emerald-500 text-white border-transparent shadow-sm" },
+    absent:  { label: "Absent",  icon: XCircle,      active: "bg-destructive text-destructive-foreground border-transparent shadow-sm" },
+    late:    { label: "Late",    icon: Clock,        active: "bg-amber-400 text-white border-transparent shadow-sm" },
   };
   const config = map[value];
   const Icon = config.icon;
@@ -115,7 +115,7 @@ const RecapSendModal = ({
         }
       }
 
-      // Save homework
+      // Save/update homework
       if (homeworkItems.length > 0) {
         await supabase.from("class_homework").upsert({
           studio_id: studioId,
@@ -123,7 +123,7 @@ const RecapSendModal = ({
           title: `Homework – ${dateStr}`,
           body_json: homeworkItems.map(item => ({ text: item, done: false })),
           status: "active",
-        }, { onConflict: "class_session_id" });
+        });
       }
 
       // Mark session completed
@@ -148,7 +148,9 @@ const RecapSendModal = ({
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Send Recaps</p>
             <h2 className="font-heading text-lg font-bold mt-0.5">Select Recipients</h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted"><X size={16} /></button>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted">
+            <X size={16} />
+          </button>
         </div>
         <div className="px-5 py-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -237,24 +239,17 @@ const SessionMode = () => {
   });
 
   const { data: members } = useQuery({
-    queryKey: ["session-members", sessionId],
+    queryKey: ["session-members", session?.class_id],
     queryFn: async () => {
-      if (!session) return [];
       const { data, error } = await supabase
         .from("class_members")
         .select("*, students(id, name, level, parent_email)")
-        .eq("class_id", session.class_id)
+        .eq("class_id", session!.class_id)
         .eq("status", "active");
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!session,
-    onSuccess: (data) => {
-      // Load existing attendance
-      const init: Record<string, AttendanceValue> = {};
-      data.forEach((m: any) => { init[m.student_id] = "scheduled"; });
-      setAttendanceMap(prev => ({ ...init, ...prev }));
-    },
+    enabled: !!session?.class_id,
   });
 
   const { data: existingAttendance } = useQuery({
@@ -268,11 +263,6 @@ const SessionMode = () => {
       return data ?? [];
     },
     enabled: !!sessionId,
-    onSuccess: (data) => {
-      const map: Record<string, AttendanceValue> = {};
-      data.forEach((a: any) => { map[a.student_id] = a.attendance as AttendanceValue; });
-      setAttendanceMap(prev => ({ ...prev, ...map }));
-    },
   });
 
   const { data: existingNotes } = useQuery({
@@ -287,9 +277,6 @@ const SessionMode = () => {
       return data;
     },
     enabled: !!sessionId,
-    onSuccess: (data) => {
-      if (data?.notes_text) setNotes(data.notes_text);
-    },
   });
 
   const { data: existingHomework } = useQuery({
@@ -304,19 +291,45 @@ const SessionMode = () => {
       return data;
     },
     enabled: !!sessionId,
-    onSuccess: (data) => {
-      if (data?.body_json) {
-        const items = (data.body_json as any[]).map((i: any) => i.text ?? i);
-        setHomeworkItems(items);
-      }
-    },
   });
+
+  // Populate state from existing data
+  useEffect(() => {
+    if (existingAttendance && existingAttendance.length > 0) {
+      const map: Record<string, AttendanceValue> = {};
+      existingAttendance.forEach((a: any) => { map[a.student_id] = a.attendance as AttendanceValue; });
+      setAttendanceMap(prev => ({ ...prev, ...map }));
+    }
+  }, [existingAttendance]);
+
+  useEffect(() => {
+    if (members && members.length > 0) {
+      setAttendanceMap(prev => {
+        const init: Record<string, AttendanceValue> = {};
+        members.forEach((m: any) => {
+          if (!prev[m.student_id]) init[m.student_id] = "scheduled";
+        });
+        return { ...init, ...prev };
+      });
+    }
+  }, [members]);
+
+  useEffect(() => {
+    if (existingNotes?.notes_text) setNotes(existingNotes.notes_text);
+  }, [existingNotes]);
+
+  useEffect(() => {
+    if (existingHomework?.body_json) {
+      const raw = existingHomework.body_json;
+      if (Array.isArray(raw)) {
+        setHomeworkItems(raw.map((i: any) => (typeof i === "string" ? i : i.text ?? "")));
+      }
+    }
+  }, [existingHomework]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!session || !studio) return;
-
-      // Save attendance
       const attRows = Object.entries(attendanceMap).map(([student_id, attendance]) => ({
         studio_id: studio.id,
         class_session_id: sessionId!,
@@ -327,25 +340,20 @@ const SessionMode = () => {
         const { error } = await supabase.from("class_attendance").upsert(attRows, { onConflict: "class_session_id,student_id" });
         if (error) throw error;
       }
-
-      // Save session notes
       const { error: notesError } = await supabase.from("class_session_notes").upsert({
         studio_id: studio.id,
         class_session_id: sessionId!,
         notes_text: notes,
-      }, { onConflict: "class_session_id" });
+      });
       if (notesError) throw notesError;
-
-      // Save homework
       if (homeworkItems.length > 0) {
         await supabase.from("class_homework").upsert({
           studio_id: studio.id,
           class_session_id: sessionId!,
           body_json: homeworkItems.map(item => ({ text: item, done: false })),
           status: "active",
-        }, { onConflict: "class_session_id" });
+        });
       }
-
       qc.invalidateQueries({ queryKey: ["class-sessions"] });
     },
     onSuccess: () => toast({ title: "Session saved ✓" }),
@@ -374,18 +382,23 @@ const SessionMode = () => {
 
   const cls = (session as any)?.classes;
 
-  if (!session) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <p className="text-muted-foreground">Loading session…</p>
-    </div>
-  );
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading session…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-card border-b border-border/60 px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(`/classes/${session.class_id}`)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
+          <button
+            onClick={() => navigate(`/classes/${session.class_id}`)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+          >
             <ChevronLeft size={18} />
           </button>
           <div>
@@ -401,7 +414,7 @@ const SessionMode = () => {
       </div>
 
       <div className="flex-1 px-4 py-5 space-y-6 max-w-2xl mx-auto w-full">
-        {/* Section 1: Attendance */}
+        {/* 1. Attendance */}
         <section>
           <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">
             1 · Attendance ({(members ?? []).length} students)
@@ -412,13 +425,18 @@ const SessionMode = () => {
               const current = attendanceMap[m.student_id] ?? "scheduled";
               return (
                 <div key={m.student_id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/50">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center font-bold text-xs shrink-0 text-foreground">
                     {s?.name?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                   </div>
                   <p className="text-sm font-medium flex-1 truncate">{s?.name}</p>
                   <div className="flex gap-1.5">
                     {(["present", "absent", "late"] as AttendanceValue[]).map(v => (
-                      <AttendanceBtn key={v} value={v} current={current} onChange={val => setAttendanceMap(prev => ({ ...prev, [m.student_id]: val }))} />
+                      <AttendanceBtn
+                        key={v}
+                        value={v}
+                        current={current}
+                        onChange={val => setAttendanceMap(prev => ({ ...prev, [m.student_id]: val }))}
+                      />
                     ))}
                   </div>
                 </div>
@@ -427,7 +445,7 @@ const SessionMode = () => {
           </div>
         </section>
 
-        {/* Section 2: Notes */}
+        {/* 2. Notes */}
         <section>
           <div className="flex items-center justify-between mb-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">2 · Session Notes</Label>
@@ -443,14 +461,14 @@ const SessionMode = () => {
           <Textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="What did the group cover? Observations, dynamics, technique tips…"
+            placeholder="What did the group cover? Observations, dynamics, technique…"
             rows={4}
             className="text-sm resize-none"
             maxLength={3000}
           />
         </section>
 
-        {/* Section 3: Shared Homework */}
+        {/* 3. Homework */}
         <section>
           <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">3 · Shared Homework</Label>
           <div className="flex flex-wrap gap-1.5 mb-3">
@@ -483,7 +501,10 @@ const SessionMode = () => {
                 <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 text-sm">
                   <ListChecks size={14} className="text-muted-foreground shrink-0 mt-0.5" />
                   <span className="flex-1">{hw}</span>
-                  <button onClick={() => setHomeworkItems(prev => prev.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive transition-colors shrink-0">
+                  <button
+                    onClick={() => setHomeworkItems(prev => prev.filter((_, j) => j !== i))}
+                    className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                  >
                     <X size={12} />
                   </button>
                 </div>
@@ -495,23 +516,34 @@ const SessionMode = () => {
 
       {/* Sticky bottom */}
       <div className="sticky bottom-0 bg-card border-t border-border/60 px-4 py-4 flex gap-3 max-w-2xl mx-auto w-full">
-        <Button variant="outline" className="flex-1" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => saveMutation.mutate()}
+          disabled={saveMutation.isPending}
+        >
           <Save size={15} className="mr-2" />
           {saveMutation.isPending ? "Saving..." : "Save Draft"}
         </Button>
         <Button
           className="flex-1 bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold font-semibold"
-          onClick={async () => { await saveMutation.mutateAsync(); setShowRecap(true); }}
+          onClick={async () => {
+            await saveMutation.mutateAsync();
+            setShowRecap(true);
+          }}
           disabled={saveMutation.isPending}
         >
           <Send size={15} className="mr-2" /> Send Recaps
         </Button>
       </div>
 
-      {showRecap && session && cls && (
+      {showRecap && cls && (
         <RecapSendModal
           open={showRecap}
-          onClose={() => { setShowRecap(false); navigate(`/classes/${session.class_id}`); }}
+          onClose={() => {
+            setShowRecap(false);
+            navigate(`/classes/${session.class_id}`);
+          }}
           session={session}
           cls={cls}
           members={members ?? []}
