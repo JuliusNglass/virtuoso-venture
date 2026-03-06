@@ -498,6 +498,62 @@ const Students = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Invite Parent Dialog */}
+      <Dialog open={!!inviteStudent} onOpenChange={(open) => { if (!open) { setInviteStudent(null); setInviteLink(null); setInviteEmail(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Invite Parent</DialogTitle>
+            <DialogDescription>
+              Send {inviteStudent?.name}'s parent an invite to the parent portal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Parent Email</Label>
+              <Input
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="parent@example.com"
+              />
+            </div>
+
+            <Button
+              className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold"
+              onClick={handleInviteParent}
+              disabled={inviteLoading}
+            >
+              <Send size={14} className="mr-2" />
+              {inviteLoading ? "Sending..." : "Send Invite"}
+            </Button>
+
+            {inviteLink && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Link size={12} /> Shareable invite link
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={inviteLink}
+                    readOnly
+                    className="text-xs font-mono truncate"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={handleCopyInviteLink}
+                  >
+                    {inviteCopied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Share this link via WhatsApp or SMS for the parent to access their portal.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Lesson Mode */}
       {lessonModeStudent && (
         <LessonMode
