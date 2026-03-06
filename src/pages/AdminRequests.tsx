@@ -81,8 +81,9 @@ const AdminRequests = () => {
       const updates: Record<string, any> = { status, reviewed_at: new Date().toISOString() };
       if (adminNote !== undefined) updates.admin_notes = adminNote;
 
-      const { error } = await supabase.from("lesson_requests").update(updates).eq("id", id);
+      const { error, count } = await supabase.from("lesson_requests").update(updates, { count: "exact" }).eq("id", id);
       if (error) throw error;
+      if (count === 0) throw new Error("Permission denied: you may not have access to update this request.");
 
       // If accepted, create student record with pending_payment status
       if (status === "accepted") {
