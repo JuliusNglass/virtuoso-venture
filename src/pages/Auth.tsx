@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const PROJECT_ID   = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 
 const Auth = () => {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -13,9 +17,22 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<"teacher" | "parent" | null>(null);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const redirectAfterLogin = async () => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) { navigate("/dashboard"); return; }
+    const [{ data: roleData }, { data: studioData }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", authUser.id).maybeSingle(),
+      supabase.from("studios").select("id").eq("owner_user_id", authUser.id).maybeSingle(),
+    ]);
+    if (roleData?.role === "parent") navigate("/parent");
+    else if (!studioData) navigate("/onboarding");
+    else navigate("/dashboard");
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,20 +43,8 @@ const Auth = () => {
       toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
       return;
     }
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (authUser) {
-      const [{ data: roleData }, { data: studioData }] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", authUser.id).maybeSingle(),
-        supabase.from("studios").select("id").eq("owner_user_id", authUser.id).maybeSingle(),
-      ]);
-      setIsLoading(false);
-      if (roleData?.role === "parent") navigate("/parent");
-      else if (!studioData) navigate("/onboarding");
-      else navigate("/dashboard");
-    } else {
-      setIsLoading(false);
-      navigate("/dashboard");
-    }
+    await redirectAfterLogin();
+    setIsLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -57,6 +62,33 @@ const Auth = () => {
       toast({ title: "Account created!", description: "Please sign in to continue." });
     } else {
       navigate("/onboarding");
+    }
+  };
+
+  const handleTryDemo = async (role: "teacher" | "parent") => {
+    setDemoLoading(role);
+    try {
+      // Seed (idempotent) — uses service role server-side, safe to call publicly
+      const seedUrl = `${SUPABASE_URL}/functions/v1/seed-demo`;
+      const res = await fetch(seedUrl, { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Seeding failed");
+      }
+      const { teacher_email, teacher_password, parent_email, parent_password } = await res.json();
+
+      // Sign in as requested role
+      const demoEmail    = role === "teacher" ? teacher_email : parent_email;
+      const demoPassword = role === "teacher" ? teacher_password : parent_password;
+
+      const { error } = await signIn(demoEmail, demoPassword);
+      if (error) throw new Error(error.message);
+
+      await redirectAfterLogin();
+    } catch (err: any) {
+      toast({ title: "Demo unavailable", description: err.message, variant: "destructive" });
+    } finally {
+      setDemoLoading(null);
     }
   };
 
@@ -134,7 +166,7 @@ const Auth = () => {
                   className="w-full h-11 bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold font-bold text-sm rounded-xl mt-2"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Signing in…" : "Sign In →"}
+                  {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Sign In →"}
                 </Button>
               </form>
             ) : (
@@ -171,7 +203,7 @@ const Auth = () => {
                   className="w-full h-11 bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold font-bold text-sm rounded-xl mt-2"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Creating account…" : "Create Account →"}
+                  {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Create Account →"}
                 </Button>
               </form>
             )}
@@ -179,6 +211,36 @@ const Auth = () => {
             <p className="text-center text-xs text-muted-foreground mt-4">
               No credit card required · Free during beta
             </p>
+          </div>
+        </div>
+
+        {/* Try Demo Section */}
+        <div className="mt-4 bg-card border border-border/60 rounded-2xl p-5">
+          <div className="text-center mb-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Try a live demo</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Explore with real sample data — no sign-up needed</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-10 text-sm font-semibold rounded-xl border-border/60 hover:border-gold/60 hover:bg-gold/5 transition-all"
+              onClick={() => handleTryDemo("teacher")}
+              disabled={demoLoading !== null}
+            >
+              {demoLoading === "teacher"
+                ? <Loader2 size={14} className="animate-spin" />
+                : "🎹 Teacher Demo"}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 h-10 text-sm font-semibold rounded-xl border-border/60 hover:border-gold/60 hover:bg-gold/5 transition-all"
+              onClick={() => handleTryDemo("parent")}
+              disabled={demoLoading !== null}
+            >
+              {demoLoading === "parent"
+                ? <Loader2 size={14} className="animate-spin" />
+                : "👨‍👩‍👧 Parent Demo"}
+            </Button>
           </div>
         </div>
 

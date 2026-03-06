@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudio } from "@/hooks/useStudio";
 import { useToast } from "@/hooks/use-toast";
@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Settings2, CreditCard, Mail, Building2, CheckCircle2, AlertCircle, Copy
+  Settings2, CreditCard, Mail, Building2, CheckCircle2, AlertCircle, Copy, FlaskConical, Loader2
 } from "lucide-react";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 const Settings = () => {
   const { studio } = useStudio();
@@ -25,6 +27,7 @@ const Settings = () => {
   const [emailBody, setEmailBody] = useState(
     `Hi there,\n\nHere is the recap for {{student_name}}'s lesson on {{lesson_date}}.\n\n**Notes:**\n{{notes}}\n\n**Homework:**\n{{homework}}\n\nSee you next time!\n`
   );
+  const [demoResetting, setDemoResetting] = useState(false);
 
   const updateStudioMutation = useMutation({
     mutationFn: async () => {
@@ -42,6 +45,24 @@ const Settings = () => {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  const handleResetDemo = async () => {
+    setDemoResetting(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/seed-demo?reset=true`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Reset failed");
+      }
+      toast({ title: "Demo data reset ✓", description: "All sample data has been restored." });
+    } catch (err: any) {
+      toast({ title: "Reset failed", description: err.message, variant: "destructive" });
+    } finally {
+      setDemoResetting(false);
+    }
+  };
+
   const templateVars = [
     "{{student_name}}",
     "{{lesson_date}}",
@@ -49,6 +70,8 @@ const Settings = () => {
     "{{homework}}",
     "{{pieces}}",
   ];
+
+  const isDemo = (studio as any)?.is_demo === true;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
@@ -82,6 +105,35 @@ const Settings = () => {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Demo Data — only visible for demo studios */}
+      {isDemo && (
+        <Card className="border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-heading text-base flex items-center gap-2">
+              <FlaskConical size={16} className="text-primary" /> Demo Data
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border border-border/50 p-4">
+              <p className="text-sm font-semibold">Reset Sample Data</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Restore all demo students, lessons, recap messages, practice logs, and group class data back to their original state.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleResetDemo}
+              disabled={demoResetting}
+              className="flex items-center gap-2"
+            >
+              {demoResetting
+                ? <><Loader2 size={14} className="animate-spin" /> Resetting…</>
+                : <><FlaskConical size={14} /> Reset Demo Data</>}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Email Recap Template */}
       <Card className="border-border/50">
