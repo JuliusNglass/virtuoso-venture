@@ -88,6 +88,81 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
     enabled: !!selectedStudentId,
   });
 
+  // Group class sessions for this student
+  const { data: groupSessions } = useQuery({
+    queryKey: ["parent-group-sessions", selectedStudentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("class_members")
+        .select("class_id, classes(id, name, duration_minutes)")
+        .eq("student_id", selectedStudentId!)
+        .eq("status", "active");
+      if (error) throw error;
+      if (!data || data.length === 0) return [];
+      const classIds = data.map((m: any) => m.class_id);
+      const now = new Date().toISOString();
+      const { data: sessions, error: sessErr } = await supabase
+        .from("class_sessions")
+        .select("*, classes(id, name)")
+        .in("class_id", classIds)
+        .gte("starts_at", now)
+        .order("starts_at")
+        .limit(4);
+      if (sessErr) throw sessErr;
+      return sessions ?? [];
+    },
+    enabled: !!selectedStudentId,
+  });
+
+  // Group homework for this student
+  const { data: groupHomework } = useQuery({
+    queryKey: ["parent-group-homework", selectedStudentId],
+    queryFn: async () => {
+      const { data: members, error: mErr } = await supabase
+        .from("class_members")
+        .select("class_id")
+        .eq("student_id", selectedStudentId!)
+        .eq("status", "active");
+      if (mErr) throw mErr;
+      if (!members || members.length === 0) return [];
+      const classIds = members.map((m: any) => m.class_id);
+      const { data: sessions, error: sErr } = await supabase
+        .from("class_sessions")
+        .select("id")
+        .in("class_id", classIds)
+        .order("starts_at", { ascending: false })
+        .limit(5);
+      if (sErr) throw sErr;
+      if (!sessions || sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      const { data: hw, error: hwErr } = await supabase
+        .from("class_homework")
+        .select("*, class_sessions(starts_at, classes(name))")
+        .in("class_session_id", sessionIds)
+        .eq("status", "active");
+      if (hwErr) throw hwErr;
+      return hw ?? [];
+    },
+    enabled: !!selectedStudentId,
+  });
+
+  // Per-student group homework completions
+  const { data: groupHwCompletions, refetch: refetchGroupHwCompletions } = useQuery({
+    queryKey: ["parent-group-hw-completions", selectedStudentId],
+    queryFn: async () => {
+      if (!groupHomework || groupHomework.length === 0) return [];
+      const hwIds = groupHomework.map((h: any) => h.id);
+      const { data, error } = await supabase
+        .from("class_homework_completion")
+        .select("*")
+        .in("class_homework_id", hwIds)
+        .eq("student_id", selectedStudentId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!selectedStudentId && !!groupHomework && groupHomework.length > 0,
+  });
+
   const { data: practiceHistory } = useQuery({
     queryKey: ["parent-practice", selectedStudentId],
     queryFn: async () => {
