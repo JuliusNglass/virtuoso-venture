@@ -59,6 +59,7 @@ const Settings = () => {
       setEmailSubject(savedTemplate.subject);
       setEmailBody(savedTemplate.body);
       setBillingMode(savedTemplate.billing_mode ?? "per_lesson");
+      setReplyToEmail(savedTemplate.reply_to_email ?? "");
     }
   }, [savedTemplate]);
 

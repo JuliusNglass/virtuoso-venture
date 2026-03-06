@@ -42,6 +42,7 @@ serve(async (req) => {
         to: [to],
         subject,
         html: bodyHtml,
+        ...(replyTo ? { reply_to: replyTo } : {}),
       }),
     });
 
