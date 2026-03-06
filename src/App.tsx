@@ -27,6 +27,7 @@ import ClassDetail from "./pages/ClassDetail";
 import SessionMode from "./pages/SessionMode";
 import AppLayout from "./components/AppLayout";
 import VersionChecker from "./components/VersionChecker";
+import PWAUpdateToast from "./components/PWAUpdateToast";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <VersionChecker />
+          <PWAUpdateToast />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
