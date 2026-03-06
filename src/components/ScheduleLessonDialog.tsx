@@ -28,7 +28,7 @@ interface ScheduleLessonDialogProps {
 }
 
 const ScheduleLessonDialog = ({ open, onClose, defaultDate }: ScheduleLessonDialogProps) => {
-  const { studioId } = useStudio();
+  const { studio } = useStudio();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
