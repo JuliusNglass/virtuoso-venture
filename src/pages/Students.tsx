@@ -492,6 +492,15 @@ const Students = () => {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label>Internal Label <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
+                <Input
+                  value={editStudent.internal_label ?? ""}
+                  onChange={e => setEditStudent({ ...editStudent, internal_label: e.target.value || null })}
+                  maxLength={30}
+                  placeholder='e.g. "Jesse A" or "Year 4 class"'
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={editStudent.status} onValueChange={v => setEditStudent({ ...editStudent, status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
