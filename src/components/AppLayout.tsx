@@ -49,10 +49,12 @@ const AppSidebar = () => {
   const { studio } = useStudio();
   const { setOpen } = useSidebar();
 
-  // Close sidebar whenever the route changes
+  // Close sidebar whenever the route actually changes (not on first mount)
   useEffect(() => {
-    setOpen(false);
-  }, [location.pathname, setOpen]);
+    const handler = setTimeout(() => setOpen(false), 0);
+    return () => clearTimeout(handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const initials = studio?.name
     ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
