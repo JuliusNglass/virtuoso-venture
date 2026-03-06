@@ -85,44 +85,28 @@ const AdminRequests = () => {
       if (error) throw error;
       if (count === 0) throw new Error("Permission denied: you may not have access to update this request.");
 
-      // If accepted, create student record with pending_payment status
-      if (status === "accepted") {
+      // If accepted or waitlisted, upsert a student record (idempotent via lesson_request_id)
+      if (status === "accepted" || status === "waitlisted") {
         const request = requests?.find(r => r.id === id);
         if (request) {
-          const { error: studentError } = await supabase.from("students").insert({
-            name: request.child_name,
-            age: request.child_age,
-            parent_name: request.parent_name,
-            parent_email: request.parent_email,
-            parent_phone: request.parent_phone,
-            parent_user_id: request.parent_user_id,
-            level: request.preferred_level,
-            lesson_day: request.preferred_day,
-            lesson_time: request.preferred_time,
-            status: "pending_payment",
-            studio_id: studio?.id ?? null,
-          });
-          if (studentError) throw studentError;
-        }
-      }
-
-      // If waitlisted, create student with waiting status
-      if (status === "waitlisted") {
-        const request = requests?.find(r => r.id === id);
-        if (request) {
-          const { error: studentError } = await supabase.from("students").insert({
-            name: request.child_name,
-            age: request.child_age,
-            parent_name: request.parent_name,
-            parent_email: request.parent_email,
-            parent_phone: request.parent_phone,
-            parent_user_id: request.parent_user_id,
-            level: request.preferred_level,
-            lesson_day: request.preferred_day,
-            lesson_time: request.preferred_time,
-            status: "waiting",
-            studio_id: studio?.id ?? null,
-          });
+          const studentStatus = status === "accepted" ? "pending_payment" : "waiting";
+          const { error: studentError } = await supabase.from("students").upsert(
+            {
+              name: request.child_name,
+              age: request.child_age,
+              parent_name: request.parent_name,
+              parent_email: request.parent_email,
+              parent_phone: request.parent_phone,
+              parent_user_id: request.parent_user_id,
+              level: request.preferred_level,
+              lesson_day: request.preferred_day,
+              lesson_time: request.preferred_time,
+              status: studentStatus,
+              studio_id: studio?.id ?? null,
+              lesson_request_id: request.id,
+            },
+            { onConflict: "lesson_request_id", ignoreDuplicates: false }
+          );
           if (studentError) throw studentError;
         }
       }

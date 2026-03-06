@@ -905,6 +905,7 @@ export type Database = {
           current_piece: string | null
           id: string
           lesson_day: string | null
+          lesson_request_id: string | null
           lesson_time: string | null
           level: string
           meeting_url: string | null
@@ -924,6 +925,7 @@ export type Database = {
           current_piece?: string | null
           id?: string
           lesson_day?: string | null
+          lesson_request_id?: string | null
           lesson_time?: string | null
           level?: string
           meeting_url?: string | null
@@ -943,6 +945,7 @@ export type Database = {
           current_piece?: string | null
           id?: string
           lesson_day?: string | null
+          lesson_request_id?: string | null
           lesson_time?: string | null
           level?: string
           meeting_url?: string | null
@@ -957,6 +960,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "students_lesson_request_id_fkey"
+            columns: ["lesson_request_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "students_studio_id_fkey"
             columns: ["studio_id"]
