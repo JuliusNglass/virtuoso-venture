@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     await up(db, "lessons", [
       { id: L.et, student_id: S.emma,   date: today,  attendance: "present",   notes: "Nailed the A section at performance tempo. Pedal sustain in bars 16-24 sounding beautiful.", homework: "B section hands separate at 60 bpm. LH bass notes landing cleanly.", pieces: ["Für Elise – Beethoven"] },
       { id: L.lt, student_id: S.lucas,  date: today,  attendance: "present",   notes: "Completed all five Twinkle variations. Bowing technique has improved enormously.", homework: "D major scale daily. Variation C slow + fast.", pieces: ["Twinkle Variations – Suzuki", "D Major Scale"] },
-      { id: L.st, student_id: S.sophia, date: today,  attendance: "scheduled", notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
+      { id: L.st, student_id: S.sophia, date: today,  attendance: "present",   notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
     ]);
 
     // 7. Lessons — past + upcoming
@@ -156,11 +156,11 @@ Deno.serve(async (req) => {
       { id: L.om2, student_id: S.oliver, date: d(-14), attendance: "cancelled", notes: "Bank holiday — rescheduled.", homework: null, pieces: [] },
       { id: L.am1, student_id: S.aisha,  date: d(-7),  attendance: "present",   notes: "Arabesque has the right dreamy character. Discussed Debussy impressionism.", homework: "Bars 1-30 from memory. Experiment with pedal timing.", pieces: ["Arabesque No. 1 – Debussy"] },
       { id: L.am2, student_id: S.aisha,  date: d(-14), attendance: "present",   notes: "Initial read-through. Strong sight-reading!", homework: "RH alone bars 1-16. Tap LH rhythm separately.", pieces: ["Arabesque No. 1 – Debussy"] },
-      { id: L.eu1, student_id: S.emma,   date: d(7),   attendance: "scheduled", notes: null, homework: null, pieces: ["Für Elise – Beethoven"] },
-      { id: L.lu1, student_id: S.lucas,  date: d(6),   attendance: "scheduled", notes: null, homework: null, pieces: ["Twinkle Variations – Suzuki"] },
-      { id: L.su1, student_id: S.sophia, date: d(5),   attendance: "scheduled", notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
-      { id: L.ou1, student_id: S.oliver, date: d(4),   attendance: "scheduled", notes: null, homework: null, pieces: ["The Entertainer – Scott Joplin"] },
-      { id: L.au1, student_id: S.aisha,  date: d(3),   attendance: "scheduled", notes: null, homework: null, pieces: ["Arabesque No. 1 – Debussy"] },
+      { id: L.eu1, student_id: S.emma,   date: d(7),   attendance: "present",   notes: null, homework: null, pieces: ["Für Elise – Beethoven"] },
+      { id: L.lu1, student_id: S.lucas,  date: d(6),   attendance: "present",   notes: null, homework: null, pieces: ["Twinkle Variations – Suzuki"] },
+      { id: L.su1, student_id: S.sophia, date: d(5),   attendance: "present",   notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
+      { id: L.ou1, student_id: S.oliver, date: d(4),   attendance: "present",   notes: null, homework: null, pieces: ["The Entertainer – Scott Joplin"] },
+      { id: L.au1, student_id: S.aisha,  date: d(3),   attendance: "present",   notes: null, homework: null, pieces: ["Arabesque No. 1 – Debussy"] },
     ]);
 
     // 8. Recaps
