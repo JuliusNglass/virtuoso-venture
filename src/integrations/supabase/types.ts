@@ -14,8 +14,351 @@ export type Database = {
   }
   public: {
     Tables: {
+      class_attendance: {
+        Row: {
+          attendance: string
+          class_session_id: string
+          id: string
+          note: string | null
+          student_id: string
+          studio_id: string
+          updated_at: string
+        }
+        Insert: {
+          attendance?: string
+          class_session_id: string
+          id?: string
+          note?: string | null
+          student_id: string
+          studio_id: string
+          updated_at?: string
+        }
+        Update: {
+          attendance?: string
+          class_session_id?: string
+          id?: string
+          note?: string | null
+          student_id?: string
+          studio_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_attendance_class_session_id_fkey"
+            columns: ["class_session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_attendance_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_homework: {
+        Row: {
+          body_json: Json
+          class_session_id: string
+          created_at: string
+          id: string
+          status: string
+          studio_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_json?: Json
+          class_session_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          studio_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_json?: Json
+          class_session_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          studio_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_homework_class_session_id_fkey"
+            columns: ["class_session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_homework_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_homework_completion: {
+        Row: {
+          body_json: Json
+          class_homework_id: string
+          id: string
+          status: string
+          student_id: string
+          studio_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_json?: Json
+          class_homework_id: string
+          id?: string
+          status?: string
+          student_id: string
+          studio_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_json?: Json
+          class_homework_id?: string
+          id?: string
+          status?: string
+          student_id?: string
+          studio_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_homework_completion_class_homework_id_fkey"
+            columns: ["class_homework_id"]
+            isOneToOne: false
+            referencedRelation: "class_homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_homework_completion_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_homework_completion_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_members: {
+        Row: {
+          class_id: string
+          id: string
+          joined_at: string
+          status: string
+          student_id: string
+          studio_id: string
+        }
+        Insert: {
+          class_id: string
+          id?: string
+          joined_at?: string
+          status?: string
+          student_id: string
+          studio_id: string
+        }
+        Update: {
+          class_id?: string
+          id?: string
+          joined_at?: string
+          status?: string
+          student_id?: string
+          studio_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_members_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_members_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_members_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_session_notes: {
+        Row: {
+          class_session_id: string
+          created_at: string
+          id: string
+          notes_text: string
+          studio_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_session_id: string
+          created_at?: string
+          id?: string
+          notes_text?: string
+          studio_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_session_id?: string
+          created_at?: string
+          id?: string
+          notes_text?: string
+          studio_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_session_notes_class_session_id_fkey"
+            columns: ["class_session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_session_notes_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_sessions: {
+        Row: {
+          class_id: string
+          created_at: string
+          ends_at: string
+          id: string
+          starts_at: string
+          status: string
+          studio_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          ends_at: string
+          id?: string
+          starts_at: string
+          status?: string
+          studio_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          ends_at?: string
+          id?: string
+          starts_at?: string
+          status?: string
+          studio_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_sessions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_sessions_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          default_day: string | null
+          default_time: string | null
+          duration_minutes: number
+          id: string
+          name: string
+          status: string
+          studio_id: string
+          teacher_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          default_day?: string | null
+          default_time?: string | null
+          duration_minutes?: number
+          id?: string
+          name: string
+          status?: string
+          studio_id: string
+          teacher_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          default_day?: string | null
+          default_time?: string | null
+          duration_minutes?: number
+          id?: string
+          name?: string
+          status?: string
+          studio_id?: string
+          teacher_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       files: {
         Row: {
+          class_id: string | null
+          class_session_id: string | null
           created_at: string
           file_path: string
           file_size: number | null
@@ -28,6 +371,8 @@ export type Database = {
           uploaded_by: string | null
         }
         Insert: {
+          class_id?: string | null
+          class_session_id?: string | null
           created_at?: string
           file_path: string
           file_size?: number | null
@@ -40,6 +385,8 @@ export type Database = {
           uploaded_by?: string | null
         }
         Update: {
+          class_id?: string | null
+          class_session_id?: string | null
           created_at?: string
           file_path?: string
           file_size?: number | null
@@ -52,6 +399,20 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "files_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_class_session_id_fkey"
+            columns: ["class_session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "files_lesson_id_fkey"
             columns: ["lesson_id"]
@@ -421,6 +782,8 @@ export type Database = {
       recap_messages: {
         Row: {
           body_html: string
+          class_id: string | null
+          class_session_id: string | null
           created_at: string
           email_to: string | null
           id: string
@@ -433,6 +796,8 @@ export type Database = {
         }
         Insert: {
           body_html?: string
+          class_id?: string | null
+          class_session_id?: string | null
           created_at?: string
           email_to?: string | null
           id?: string
@@ -445,6 +810,8 @@ export type Database = {
         }
         Update: {
           body_html?: string
+          class_id?: string | null
+          class_session_id?: string | null
           created_at?: string
           email_to?: string | null
           id?: string
@@ -456,6 +823,20 @@ export type Database = {
           subject?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "recap_messages_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recap_messages_class_session_id_fkey"
+            columns: ["class_session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "recap_messages_lesson_id_fkey"
             columns: ["lesson_id"]

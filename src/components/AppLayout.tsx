@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Music,
   FileText, UserPlus, LogOut, Bell, MessageCircle,
-  Sun, CreditCard, Settings2,
+  Sun, CreditCard, Settings2, GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
@@ -32,6 +32,7 @@ const navItems = [
   { path: "/dashboard",  label: "Dashboard",       icon: LayoutDashboard },
   { path: "/students",   label: "Students",        icon: Users },
   { path: "/lessons",    label: "Lessons",         icon: BookOpen },
+  { path: "/classes",    label: "Classes",         icon: GraduationCap },
   { path: "/calendar",   label: "Calendar",        icon: Calendar },
   { path: "/messages",   label: "Messages",        icon: MessageCircle },
   { path: "/repertoire", label: "Music Library",   icon: Music },

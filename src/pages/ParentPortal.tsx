@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, LogOut, BookOpen, FileText, Download, Send,
   Inbox, Video, Music, Clock, Play, Square, Plus, ListChecks,
-  ChevronRight, MessageCircle, Home, FileIcon
+  ChevronRight, MessageCircle, Home, FileIcon, Users
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
@@ -86,6 +86,81 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
       return data;
     },
     enabled: !!selectedStudentId,
+  });
+
+  // Group class sessions for this student
+  const { data: groupSessions } = useQuery({
+    queryKey: ["parent-group-sessions", selectedStudentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("class_members")
+        .select("class_id, classes(id, name, duration_minutes)")
+        .eq("student_id", selectedStudentId!)
+        .eq("status", "active");
+      if (error) throw error;
+      if (!data || data.length === 0) return [];
+      const classIds = data.map((m: any) => m.class_id);
+      const now = new Date().toISOString();
+      const { data: sessions, error: sessErr } = await supabase
+        .from("class_sessions")
+        .select("*, classes(id, name)")
+        .in("class_id", classIds)
+        .gte("starts_at", now)
+        .order("starts_at")
+        .limit(4);
+      if (sessErr) throw sessErr;
+      return sessions ?? [];
+    },
+    enabled: !!selectedStudentId,
+  });
+
+  // Group homework for this student
+  const { data: groupHomework } = useQuery({
+    queryKey: ["parent-group-homework", selectedStudentId],
+    queryFn: async () => {
+      const { data: members, error: mErr } = await supabase
+        .from("class_members")
+        .select("class_id")
+        .eq("student_id", selectedStudentId!)
+        .eq("status", "active");
+      if (mErr) throw mErr;
+      if (!members || members.length === 0) return [];
+      const classIds = members.map((m: any) => m.class_id);
+      const { data: sessions, error: sErr } = await supabase
+        .from("class_sessions")
+        .select("id")
+        .in("class_id", classIds)
+        .order("starts_at", { ascending: false })
+        .limit(5);
+      if (sErr) throw sErr;
+      if (!sessions || sessions.length === 0) return [];
+      const sessionIds = sessions.map(s => s.id);
+      const { data: hw, error: hwErr } = await supabase
+        .from("class_homework")
+        .select("*, class_sessions(starts_at, classes(name))")
+        .in("class_session_id", sessionIds)
+        .eq("status", "active");
+      if (hwErr) throw hwErr;
+      return hw ?? [];
+    },
+    enabled: !!selectedStudentId,
+  });
+
+  // Per-student group homework completions
+  const { data: groupHwCompletions, refetch: refetchGroupHwCompletions } = useQuery({
+    queryKey: ["parent-group-hw-completions", selectedStudentId],
+    queryFn: async () => {
+      if (!groupHomework || groupHomework.length === 0) return [];
+      const hwIds = groupHomework.map((h: any) => h.id);
+      const { data, error } = await supabase
+        .from("class_homework_completion")
+        .select("*")
+        .in("class_homework_id", hwIds)
+        .eq("student_id", selectedStudentId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!selectedStudentId && !!groupHomework && groupHomework.length > 0,
   });
 
   const { data: practiceHistory } = useQuery({
@@ -358,8 +433,30 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
                   </Card>
                 )}
 
-                {/* Upcoming lessons */}
+                {/* Upcoming 1:1 lessons */}
                 <UpcomingLessons studentId={selectedStudentId!} />
+
+                {/* Upcoming group sessions */}
+                {groupSessions && groupSessions.length > 0 && (
+                  <Card className="border-border/50">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="text-sm font-heading flex items-center gap-2">
+                        <Users size={14} className="text-primary" /> Upcoming Group Sessions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-2">
+                      {groupSessions.map((s: any) => (
+                        <div key={s.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/40">
+                          <Clock size={13} className="text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{(s.classes as any)?.name}</p>
+                            <p className="text-xs text-muted-foreground">{format(new Date(s.starts_at), "EEE d MMM, HH:mm")}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Practice logger */}
                 <Card className="border-border/50">
