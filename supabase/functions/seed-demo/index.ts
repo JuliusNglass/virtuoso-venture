@@ -245,7 +245,9 @@ Deno.serve(async (req) => {
       { id: CHW.th1, studio_id: DEMO_STUDIO_ID, class_session_id: CS.tp1, title: "Intervals Worksheet",             status: "active", body_json: [{ id:1, text:"Complete intervals worksheet (page 12)", done:false }, { id:2, text:"Identify 5 intervals in your current piece", done:false }, { id:3, text:"Practise hearing M3 vs m3 with piano", done:false }] },
     ]);
 
-    // 13. Messages
+    // 13. Messages — delete stale rows first (catches old invalid UUIDs from prior seeds)
+    await db.from("messages").delete().in("thread_id", Object.values(TH));
+    await db.from("message_threads").delete().in("id", Object.values(TH));
     await up(db, "message_threads", [
       { id: TH.emma,   studio_id: DEMO_STUDIO_ID, student_id: S.emma },
       { id: TH.lucas,  studio_id: DEMO_STUDIO_ID, student_id: S.lucas },
