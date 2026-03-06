@@ -985,6 +985,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          reply_to_email: string | null
           studio_id: string
           subject: string
           updated_at: string
@@ -994,6 +995,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          reply_to_email?: string | null
           studio_id: string
           subject?: string
           updated_at?: string
@@ -1003,6 +1005,7 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          reply_to_email?: string | null
           studio_id?: string
           subject?: string
           updated_at?: string

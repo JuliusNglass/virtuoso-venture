@@ -28,6 +28,17 @@ const RecapPreviewModal = ({ open, onClose, student, lessonId, notes, pieces, ho
 
   const sendMutation = useMutation({
     mutationFn: async () => {
+      // Fetch studio reply_to_email if studioId is available
+      let replyTo: string | undefined;
+      if (studioId) {
+        const { data: tpl } = await supabase
+          .from("studio_email_templates" as any)
+          .select("reply_to_email")
+          .eq("studio_id", studioId)
+          .maybeSingle();
+        replyTo = (tpl as any)?.reply_to_email ?? undefined;
+      }
+
       const subject = `Lesson Recap – ${student.name} – ${dateStr}`;
       const bodyHtml = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
@@ -69,7 +80,7 @@ const RecapPreviewModal = ({ open, onClose, student, lessonId, notes, pieces, ho
 
       // 3. Send email via edge function
       const { data: emailResult, error: fnError } = await supabase.functions.invoke("send-recap-email", {
-        body: { to: student.parent_email, subject, bodyHtml, studentName: student.name },
+        body: { to: student.parent_email, subject, bodyHtml, studentName: student.name, replyTo: replyTo ?? undefined },
       });
 
       if (fnError) throw fnError;

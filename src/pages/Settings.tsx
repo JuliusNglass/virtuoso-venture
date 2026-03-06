@@ -36,6 +36,7 @@ const Settings = () => {
     `Hi there,\n\nHere is the recap for {{student_name}}'s lesson on {{lesson_date}}.\n\n**Notes:**\n{{notes}}\n\n**Homework:**\n{{homework}}\n\nSee you next time!\n`
   );
   const [billingMode, setBillingMode] = useState("per_lesson");
+  const [replyToEmail, setReplyToEmail] = useState("");
   const [templateDirty, setTemplateDirty] = useState(false);
 
   // ── Load persisted template ───────────────────────────────────────────────
@@ -58,6 +59,7 @@ const Settings = () => {
       setEmailSubject(savedTemplate.subject);
       setEmailBody(savedTemplate.body);
       setBillingMode(savedTemplate.billing_mode ?? "per_lesson");
+      setReplyToEmail(savedTemplate.reply_to_email ?? "");
     }
   }, [savedTemplate]);
 
@@ -91,6 +93,7 @@ const Settings = () => {
         subject: emailSubject,
         body: emailBody,
         billing_mode: billingMode,
+        reply_to_email: replyToEmail || null,
       };
       const { error } = await (supabase.from("studio_email_templates" as any) as any)
         .upsert(payload, { onConflict: "studio_id" });
@@ -247,6 +250,16 @@ const Settings = () => {
                 <Copy size={9} /> {v}
               </button>
             ))}
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Reply-To Email</Label>
+            <Input
+              type="email"
+              value={replyToEmail}
+              onChange={(e) => { setReplyToEmail(e.target.value); setTemplateDirty(true); }}
+              placeholder="your@email.com — parents' replies go here"
+            />
+            <p className="text-xs text-muted-foreground">Leave blank to use the default no-reply address.</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Subject</Label>

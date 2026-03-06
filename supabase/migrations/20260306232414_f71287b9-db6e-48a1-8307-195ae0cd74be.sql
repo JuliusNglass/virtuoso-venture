@@ -1,0 +1,1 @@
+ALTER TABLE public.studio_email_templates ADD COLUMN IF NOT EXISTS reply_to_email text;
