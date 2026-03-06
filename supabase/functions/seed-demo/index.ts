@@ -245,27 +245,32 @@ Deno.serve(async (req) => {
       { id: CHW.th1, studio_id: DEMO_STUDIO_ID, class_session_id: CS.tp1, title: "Intervals Worksheet",             status: "active", body_json: [{ id:1, text:"Complete intervals worksheet (page 12)", done:false }, { id:2, text:"Identify 5 intervals in your current piece", done:false }, { id:3, text:"Practise hearing M3 vs m3 with piano", done:false }] },
     ]);
 
-    // 13. Messages — delete stale rows first (catches old invalid UUIDs from prior seeds)
-    await db.from("messages").delete().in("thread_id", Object.values(TH));
-    await db.from("message_threads").delete().in("id", Object.values(TH));
+    // 13. Messages — nuke ALL messages/threads for this studio first to clear any stale/invalid-UUID rows from prior seeds
+    await db.from("messages").delete().eq("studio_id", DEMO_STUDIO_ID);
+    await db.from("message_threads").delete().eq("studio_id", DEMO_STUDIO_ID);
     await up(db, "message_threads", [
       { id: TH.emma,   studio_id: DEMO_STUDIO_ID, student_id: S.emma },
       { id: TH.lucas,  studio_id: DEMO_STUDIO_ID, student_id: S.lucas },
       { id: TH.sophia, studio_id: DEMO_STUDIO_ID, student_id: S.sophia },
     ]);
-    await up(db, "messages", [
-      { id: "aa000001-0001-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Sarah! Just a reminder that Emma's next lesson is Monday at 10am. She's doing brilliantly with Für Elise 🎵" },
-      { id: "aa000001-0002-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Thank you! She has been practising every day this week. Really excited for the recital." },
-      { id: "aa000001-0003-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "The extra practice really shows. I think she's very close to performance-ready." },
-      { id: "aa000001-0004-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "She asked if she could learn a second piece. Would that be possible to discuss at the next lesson?" },
-      { id: "aa000001-0005-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Absolutely! I have some great Grade 4 repertoire ideas for her. Let's talk Monday 😊" },
-      { id: "aa000001-0006-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Marco! Lucas did really well today. The bowing has improved so much. Please make sure he uses the mirror exercise daily." },
-      { id: "aa000001-0007-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Will do! He actually asked to practise before dinner yesterday which was a first 😄" },
-      { id: "aa000001-0008-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "That's a brilliant sign! Self-motivation at this age makes all the difference. See you Tuesday!" },
-      { id: "aa000001-0009-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Ji-Young! Sophia's Grade 6 exam prep is going very well. Considering entering her for the June session. Thoughts?" },
-      { id: "aa000001-0010-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "That sounds wonderful! She would be thrilled. What does she need to prepare?" },
-      { id: "aa000001-0011-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Three contrasting pieces, scales, and sight-reading. She already has A and B sorted. I'll send the syllabus." },
-    ]);
+    // Insert messages individually to avoid any batch UUID coercion issues
+    const msgs = [
+      { id: "aa000001-aa01-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Sarah! Just a reminder that Emma's next lesson is Monday at 10am. She's doing brilliantly with Für Elise 🎵" },
+      { id: "aa000001-aa02-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Thank you! She has been practising every day this week. Really excited for the recital." },
+      { id: "aa000001-aa03-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "The extra practice really shows. I think she's very close to performance-ready." },
+      { id: "aa000001-aa04-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "She asked if she could learn a second piece. Would that be possible to discuss at the next lesson?" },
+      { id: "aa000001-aa05-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Absolutely! I have some great Grade 4 repertoire ideas for her. Let's talk Monday 😊" },
+      { id: "aa000002-aa01-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Marco! Lucas did really well today. The bowing has improved so much. Please make sure he uses the mirror exercise daily." },
+      { id: "aa000002-aa02-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Will do! He actually asked to practise before dinner yesterday which was a first 😄" },
+      { id: "aa000002-aa03-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "That's a brilliant sign! Self-motivation at this age makes all the difference. See you Tuesday!" },
+      { id: "aa000003-aa01-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Ji-Young! Sophia's Grade 6 exam prep is going very well. Considering entering her for the June session. Thoughts?" },
+      { id: "aa000003-aa02-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "That sounds wonderful! She would be thrilled. What does she need to prepare?" },
+      { id: "aa000003-aa03-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Three contrasting pieces, scales, and sight-reading. She already has A and B sorted. I'll send the syllabus." },
+    ];
+    for (const msg of msgs) {
+      const { error: msgErr } = await db.from("messages").upsert(msg, { onConflict: "id" });
+      if (msgErr) throw new Error(`upsert messages row ${msg.id}: ${msgErr.message}`);
+    }
 
     // 14. Lesson requests
     const now = new Date();
