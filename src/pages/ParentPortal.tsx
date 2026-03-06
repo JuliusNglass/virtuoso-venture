@@ -433,8 +433,30 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
                   </Card>
                 )}
 
-                {/* Upcoming lessons */}
+                {/* Upcoming 1:1 lessons */}
                 <UpcomingLessons studentId={selectedStudentId!} />
+
+                {/* Upcoming group sessions */}
+                {groupSessions && groupSessions.length > 0 && (
+                  <Card className="border-border/50">
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <CardTitle className="text-sm font-heading flex items-center gap-2">
+                        <Users size={14} className="text-primary" /> Upcoming Group Sessions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 space-y-2">
+                      {groupSessions.map((s: any) => (
+                        <div key={s.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/40">
+                          <Clock size={13} className="text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{(s.classes as any)?.name}</p>
+                            <p className="text-xs text-muted-foreground">{format(new Date(s.starts_at), "EEE d MMM, HH:mm")}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Practice logger */}
                 <Card className="border-border/50">
