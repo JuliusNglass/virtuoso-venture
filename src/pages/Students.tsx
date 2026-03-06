@@ -43,6 +43,11 @@ const Students = () => {
   const [editStudent, setEditStudent] = useState<any>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [lessonModeStudent, setLessonModeStudent] = useState<any>(null);
+  const [inviteStudent, setInviteStudent] = useState<any>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
