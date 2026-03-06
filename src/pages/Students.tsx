@@ -115,6 +115,46 @@ const Students = () => {
     setNewDay("Monday"); setNewTime(""); setNewParentName(""); setNewParentEmail(""); setNewParentPhone("");
   };
 
+  const handleInviteParent = async () => {
+    const email = inviteEmail.trim() || inviteStudent?.parent_email;
+    if (!email) {
+      toast({ title: "Please enter a parent email", variant: "destructive" });
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("invite-parent", {
+        body: {
+          parentEmail: email,
+          parentName: inviteStudent?.parent_name,
+          studentName: inviteStudent?.name,
+          studentId: inviteStudent?.id,
+        },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error || !data?.success) throw new Error(data?.error || error?.message || "Failed");
+      setInviteLink(data.inviteLink);
+      toast({
+        title: data.emailSent ? "Invite sent!" : "Invite link generated",
+        description: data.emailSent
+          ? `Welcome email sent to ${email}`
+          : "No email provider configured — copy the link below to share manually.",
+      });
+    } catch (err: any) {
+      toast({ title: "Failed to send invite", description: err.message, variant: "destructive" });
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleCopyInviteLink = () => {
+    if (!inviteLink) return;
+    navigator.clipboard.writeText(inviteLink);
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 2000);
+  };
+
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     addMutation.mutate({
