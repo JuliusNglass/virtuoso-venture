@@ -203,7 +203,7 @@ Deno.serve(async (req) => {
     }, { onConflict: "id" });
 
     // ── 5. Students ───────────────────────────────────────────────────────────
-    await admin.from("students").upsert([
+    const { error: studentsErr } = await admin.from("students").upsert([
       {
         id: S.emma,
         name: "Emma Chen",
