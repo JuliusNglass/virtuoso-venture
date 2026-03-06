@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+// @ts-ignore - Users imported for group sessions
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
