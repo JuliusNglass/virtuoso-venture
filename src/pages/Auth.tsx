@@ -25,13 +25,17 @@ const Auth = () => {
   const redirectAfterLogin = async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) { navigate("/dashboard"); return; }
-    const [{ data: roleData }, { data: studioData }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", authUser.id).maybeSingle(),
-      supabase.from("studios").select("id").eq("owner_user_id", authUser.id).maybeSingle(),
+    const [{ data: roleRows }, { data: studioData }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", authUser.id),
+      supabase.from("studios").select("id, is_demo").eq("owner_user_id", authUser.id).maybeSingle(),
     ]);
-    if (roleData?.role === "parent") navigate("/parent");
-    else if (!studioData) navigate("/onboarding");
-    else navigate("/dashboard");
+    const roles = roleRows?.map(r => r.role) ?? [];
+    // Demo accounts (is_demo studio) always get full dashboard access
+    if (studioData?.is_demo) { navigate("/dashboard"); return; }
+    // Parent-only accounts go to the parent portal
+    if (roles.includes("parent") && !roles.includes("admin") && !studioData) { navigate("/parent"); return; }
+    if (!studioData) { navigate("/onboarding"); return; }
+    navigate("/dashboard");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
