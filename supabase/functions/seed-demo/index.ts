@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
       { id: S.oliver,   name: "Oliver Kim",    studio_id: DEMO_STUDIO_ID, parent_name: "David Kim",      parent_email: "david.kim@example.com",       parent_phone: "+447700900004", level: "Grade 3", age: 11, lesson_day: "Thursday",  lesson_time: "15:00", current_piece: "The Entertainer – Scott Joplin",   notes: "Loves ragtime. Works best with recordings to emulate.", status: "active" },
       { id: S.aisha,    name: "Aisha Patel",   studio_id: DEMO_STUDIO_ID, parent_name: "Priya Patel",    parent_email: "priya.patel@example.com",     parent_phone: "+447700900005", level: "Grade 5", age: 13, lesson_day: "Friday",    lesson_time: "09:00", current_piece: "Arabesque No. 1 – Debussy",        notes: "Sensitive musicality. Needs to build confidence in performance.", status: "active" },
       { id: S.waitlist, name: "Mia Thompson",  studio_id: DEMO_STUDIO_ID, parent_name: "Rachel Thompson", parent_email: "rachel.t@example.com",       level: "Grade 1", age: 7, status: "waiting" },
-      { id: S.overdue,  name: "Jake Morrison", studio_id: DEMO_STUDIO_ID, parent_name: "Tom Morrison",   parent_email: "tom.morrison@example.com",   parent_phone: "+447700900006", level: "Grade 3", age: 9,  lesson_day: "Friday",    lesson_time: "11:00", current_piece: "Sonatina in C – Clementi", status: "awaiting_payment" },
+      { id: S.overdue,  name: "Jake Morrison", studio_id: DEMO_STUDIO_ID, parent_name: "Tom Morrison",   parent_email: "tom.morrison@example.com",   parent_phone: "+447700900006", level: "Grade 3", age: 9,  lesson_day: "Friday",    lesson_time: "11:00", current_piece: "Sonatina in C – Clementi", status: "paused" },
     ]);
 
     const today = d(0);
@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     await up(db, "lessons", [
       { id: L.et, student_id: S.emma,   date: today,  attendance: "present",   notes: "Nailed the A section at performance tempo. Pedal sustain in bars 16-24 sounding beautiful.", homework: "B section hands separate at 60 bpm. LH bass notes landing cleanly.", pieces: ["Für Elise – Beethoven"] },
       { id: L.lt, student_id: S.lucas,  date: today,  attendance: "present",   notes: "Completed all five Twinkle variations. Bowing technique has improved enormously.", homework: "D major scale daily. Variation C slow + fast.", pieces: ["Twinkle Variations – Suzuki", "D Major Scale"] },
-      { id: L.st, student_id: S.sophia, date: today,  attendance: "scheduled", notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
+      { id: L.st, student_id: S.sophia, date: today,  attendance: "present",   notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
     ]);
 
     // 7. Lessons — past + upcoming
@@ -156,11 +156,11 @@ Deno.serve(async (req) => {
       { id: L.om2, student_id: S.oliver, date: d(-14), attendance: "cancelled", notes: "Bank holiday — rescheduled.", homework: null, pieces: [] },
       { id: L.am1, student_id: S.aisha,  date: d(-7),  attendance: "present",   notes: "Arabesque has the right dreamy character. Discussed Debussy impressionism.", homework: "Bars 1-30 from memory. Experiment with pedal timing.", pieces: ["Arabesque No. 1 – Debussy"] },
       { id: L.am2, student_id: S.aisha,  date: d(-14), attendance: "present",   notes: "Initial read-through. Strong sight-reading!", homework: "RH alone bars 1-16. Tap LH rhythm separately.", pieces: ["Arabesque No. 1 – Debussy"] },
-      { id: L.eu1, student_id: S.emma,   date: d(7),   attendance: "scheduled", notes: null, homework: null, pieces: ["Für Elise – Beethoven"] },
-      { id: L.lu1, student_id: S.lucas,  date: d(6),   attendance: "scheduled", notes: null, homework: null, pieces: ["Twinkle Variations – Suzuki"] },
-      { id: L.su1, student_id: S.sophia, date: d(5),   attendance: "scheduled", notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
-      { id: L.ou1, student_id: S.oliver, date: d(4),   attendance: "scheduled", notes: null, homework: null, pieces: ["The Entertainer – Scott Joplin"] },
-      { id: L.au1, student_id: S.aisha,  date: d(3),   attendance: "scheduled", notes: null, homework: null, pieces: ["Arabesque No. 1 – Debussy"] },
+      { id: L.eu1, student_id: S.emma,   date: d(7),   attendance: "present",   notes: null, homework: null, pieces: ["Für Elise – Beethoven"] },
+      { id: L.lu1, student_id: S.lucas,  date: d(6),   attendance: "present",   notes: null, homework: null, pieces: ["Twinkle Variations – Suzuki"] },
+      { id: L.su1, student_id: S.sophia, date: d(5),   attendance: "present",   notes: null, homework: null, pieces: ["Moonlight Sonata Op. 27 No. 2"] },
+      { id: L.ou1, student_id: S.oliver, date: d(4),   attendance: "present",   notes: null, homework: null, pieces: ["The Entertainer – Scott Joplin"] },
+      { id: L.au1, student_id: S.aisha,  date: d(3),   attendance: "present",   notes: null, homework: null, pieces: ["Arabesque No. 1 – Debussy"] },
     ]);
 
     // 8. Recaps
@@ -252,17 +252,17 @@ Deno.serve(async (req) => {
       { id: TH.sophia, studio_id: DEMO_STUDIO_ID, student_id: S.sophia },
     ]);
     await up(db, "messages", [
-      { id: "msg00001-0001-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Sarah! Just a reminder that Emma's next lesson is Monday at 10am. She's doing brilliantly with Für Elise 🎵" },
-      { id: "msg00001-0002-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Thank you! She has been practising every day this week. Really excited for the recital." },
-      { id: "msg00001-0003-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "The extra practice really shows. I think she's very close to performance-ready." },
-      { id: "msg00001-0004-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "She asked if she could learn a second piece. Would that be possible to discuss at the next lesson?" },
-      { id: "msg00001-0005-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Absolutely! I have some great Grade 4 repertoire ideas for her. Let's talk Monday 😊" },
-      { id: "msg00001-0006-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Marco! Lucas did really well today. The bowing has improved so much. Please make sure he uses the mirror exercise daily." },
-      { id: "msg00001-0007-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Will do! He actually asked to practise before dinner yesterday which was a first 😄" },
-      { id: "msg00001-0008-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "That's a brilliant sign! Self-motivation at this age makes all the difference. See you Tuesday!" },
-      { id: "msg00001-0009-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Ji-Young! Sophia's Grade 6 exam prep is going very well. Considering entering her for the June session. Thoughts?" },
-      { id: "msg00001-0010-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "That sounds wonderful! She would be thrilled. What does she need to prepare?" },
-      { id: "msg00001-0011-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Three contrasting pieces, scales, and sight-reading. She already has A and B sorted. I'll send the syllabus." },
+      { id: "aa000001-0001-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Sarah! Just a reminder that Emma's next lesson is Monday at 10am. She's doing brilliantly with Für Elise 🎵" },
+      { id: "aa000001-0002-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Thank you! She has been practising every day this week. Really excited for the recital." },
+      { id: "aa000001-0003-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "The extra practice really shows. I think she's very close to performance-ready." },
+      { id: "aa000001-0004-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "She asked if she could learn a second piece. Would that be possible to discuss at the next lesson?" },
+      { id: "aa000001-0005-4000-8000-000000000001", thread_id: TH.emma,   studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Absolutely! I have some great Grade 4 repertoire ideas for her. Let's talk Monday 😊" },
+      { id: "aa000001-0006-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Marco! Lucas did really well today. The bowing has improved so much. Please make sure he uses the mirror exercise daily." },
+      { id: "aa000001-0007-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "Will do! He actually asked to practise before dinner yesterday which was a first 😄" },
+      { id: "aa000001-0008-4000-8000-000000000001", thread_id: TH.lucas,  studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "That's a brilliant sign! Self-motivation at this age makes all the difference. See you Tuesday!" },
+      { id: "aa000001-0009-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Hi Ji-Young! Sophia's Grade 6 exam prep is going very well. Considering entering her for the June session. Thoughts?" },
+      { id: "aa000001-0010-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: parentId,  body: "That sounds wonderful! She would be thrilled. What does she need to prepare?" },
+      { id: "aa000001-0011-4000-8000-000000000001", thread_id: TH.sophia, studio_id: DEMO_STUDIO_ID, sender_user_id: teacherId, body: "Three contrasting pieces, scales, and sight-reading. She already has A and B sorted. I'll send the syllabus." },
     ]);
 
     // 14. Lesson requests
