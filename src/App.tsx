@@ -39,6 +39,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <VersionChecker />
+          <PWAUpdateToast />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
