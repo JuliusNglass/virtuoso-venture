@@ -247,7 +247,14 @@ const Students = () => {
                           <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${student.status === 'active' ? 'bg-green-500' : 'bg-amber-500'}`} />
                         </div>
                         <div>
-                          <p className="font-medium group-hover:text-gold transition-colors truncate max-w-[120px]">{student.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium group-hover:text-gold transition-colors truncate max-w-[110px]">{student.name}</p>
+                            {(student as any).internal_label && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground font-mono shrink-0">
+                                {(student as any).internal_label}
+                              </span>
+                            )}
+                          </div>
                           <span className={`text-xs font-medium ${statusColors[student.status] ?? "text-muted-foreground"}`}>
                             {student.status}
                           </span>
@@ -259,6 +266,11 @@ const Students = () => {
                     </div>
 
                     <div className="space-y-1.5 text-xs text-muted-foreground">
+                      {student.parent_name && (
+                        <div className="flex items-center gap-1.5 font-medium text-foreground/70">
+                          <MessageCircle size={12} /> {student.parent_name}
+                        </div>
+                      )}
                       {student.lesson_day && (
                         <div className="flex items-center gap-1.5">
                           <Calendar size={12} /> {student.lesson_day} · {student.lesson_time}
