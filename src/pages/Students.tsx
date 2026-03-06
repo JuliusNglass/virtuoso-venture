@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle, Send, Copy, Check, Link } from "lucide-react";
+import { Search, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle, Send, Copy, Check, Link, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";

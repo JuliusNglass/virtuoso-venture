@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudio } from "@/hooks/useStudio";
 import { useToast } from "@/hooks/use-toast";
@@ -15,20 +15,57 @@ import {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
+const BILLING_MODES = [
+  { id: "per_lesson", label: "Pay per lesson", description: "Invoice per session" },
+  { id: "monthly",   label: "Monthly subscription", description: "Recurring monthly plan" },
+];
+
 const Settings = () => {
   const { studio } = useStudio();
   const { toast } = useToast();
   const qc = useQueryClient();
 
   const [studioName, setStudioName] = useState(studio?.name ?? "");
+  const [demoResetting, setDemoResetting] = useState(false);
+
+  // ── Email template state ─────────────────────────────────────────────────
   const [emailSubject, setEmailSubject] = useState(
     "Lesson Recap – {{student_name}} – {{lesson_date}}"
   );
   const [emailBody, setEmailBody] = useState(
     `Hi there,\n\nHere is the recap for {{student_name}}'s lesson on {{lesson_date}}.\n\n**Notes:**\n{{notes}}\n\n**Homework:**\n{{homework}}\n\nSee you next time!\n`
   );
-  const [demoResetting, setDemoResetting] = useState(false);
+  const [billingMode, setBillingMode] = useState("per_lesson");
+  const [templateDirty, setTemplateDirty] = useState(false);
 
+  // ── Load persisted template ───────────────────────────────────────────────
+  const { data: savedTemplate } = useQuery({
+    queryKey: ["studio-email-template", studio?.id],
+    queryFn: async () => {
+      if (!studio?.id) return null;
+      const { data } = await supabase
+        .from("studio_email_templates" as any)
+        .select("*")
+        .eq("studio_id", studio.id)
+        .maybeSingle();
+      return data as any;
+    },
+    enabled: !!studio?.id,
+  });
+
+  useEffect(() => {
+    if (savedTemplate) {
+      setEmailSubject(savedTemplate.subject);
+      setEmailBody(savedTemplate.body);
+      setBillingMode(savedTemplate.billing_mode ?? "per_lesson");
+    }
+  }, [savedTemplate]);
+
+  useEffect(() => {
+    setStudioName(studio?.name ?? "");
+  }, [studio?.name]);
+
+  // ── Studio profile ────────────────────────────────────────────────────────
   const updateStudioMutation = useMutation({
     mutationFn: async () => {
       if (!studio) return;
@@ -45,6 +82,29 @@ const Settings = () => {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  // ── Save email template ───────────────────────────────────────────────────
+  const saveTemplateMutation = useMutation({
+    mutationFn: async () => {
+      if (!studio?.id) return;
+      const payload = {
+        studio_id: studio.id,
+        subject: emailSubject,
+        body: emailBody,
+        billing_mode: billingMode,
+      };
+      const { error } = await (supabase.from("studio_email_templates" as any) as any)
+        .upsert(payload, { onConflict: "studio_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["studio-email-template", studio?.id] });
+      setTemplateDirty(false);
+      toast({ title: "Template saved ✓" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  // ── Demo reset ────────────────────────────────────────────────────────────
   const handleResetDemo = async () => {
     setDemoResetting(true);
     try {
@@ -135,6 +195,36 @@ const Settings = () => {
         </Card>
       )}
 
+      {/* Billing Mode */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-heading text-base flex items-center gap-2">
+            <CreditCard size={16} className="text-primary" /> Billing Mode
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-3">
+            {BILLING_MODES.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => { setBillingMode(mode.id); setTemplateDirty(true); }}
+                className={`flex-1 text-sm py-3 px-4 rounded-xl border text-left transition-all ${
+                  billingMode === mode.id
+                    ? "border-primary bg-primary/5 text-primary font-medium ring-1 ring-primary/30"
+                    : "border-border text-muted-foreground hover:border-primary/40"
+                }`}
+              >
+                <p className="font-semibold text-xs">{mode.label}</p>
+                <p className="text-xs opacity-70 mt-0.5">{mode.description}</p>
+              </button>
+            ))}
+          </div>
+          {templateDirty && (
+            <p className="text-xs text-amber-600">You have unsaved changes — save the template below to persist billing mode.</p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Email Recap Template */}
       <Card className="border-border/50">
         <CardHeader className="pb-3">
@@ -144,7 +234,7 @@ const Settings = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-1.5 mb-1">
-            <p className="text-xs text-muted-foreground w-full mb-1">Available variables:</p>
+            <p className="text-xs text-muted-foreground w-full mb-1">Click a variable to copy it:</p>
             {templateVars.map((v) => (
               <button
                 key={v}
@@ -162,23 +252,24 @@ const Settings = () => {
             <Label className="text-xs font-semibold">Subject</Label>
             <Input
               value={emailSubject}
-              onChange={(e) => setEmailSubject(e.target.value)}
+              onChange={(e) => { setEmailSubject(e.target.value); setTemplateDirty(true); }}
             />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Body (plain text / markdown)</Label>
             <Textarea
               value={emailBody}
-              onChange={(e) => setEmailBody(e.target.value)}
+              onChange={(e) => { setEmailBody(e.target.value); setTemplateDirty(true); }}
               rows={7}
               className="text-sm font-mono resize-none"
             />
           </div>
           <Button
-            variant="outline"
-            onClick={() => toast({ title: "Template saved ✓" })}
+            className="bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold"
+            onClick={() => saveTemplateMutation.mutate()}
+            disabled={saveTemplateMutation.isPending}
           >
-            Save Template
+            {saveTemplateMutation.isPending ? <><Loader2 size={14} className="mr-2 animate-spin" /> Saving…</> : "Save Template"}
           </Button>
         </CardContent>
       </Card>
@@ -222,25 +313,6 @@ const Settings = () => {
             <Badge variant="outline" className="text-muted-foreground">
               <AlertCircle size={11} className="mr-1" /> Not connected
             </Badge>
-          </div>
-          <div className="rounded-xl border border-border/50 p-4 space-y-2">
-            <p className="text-sm font-semibold">Billing Mode</p>
-            <div className="flex gap-2">
-              {["Pay per lesson (Invoices)", "Monthly Subscription"].map((mode, i) => (
-                <button
-                  key={i}
-                  disabled={i === 1}
-                  className={`flex-1 text-xs py-2 px-3 rounded-lg border transition-all ${
-                    i === 0
-                      ? "border-primary bg-primary/5 text-primary font-medium"
-                      : "border-border text-muted-foreground opacity-50 cursor-not-allowed"
-                  }`}
-                >
-                  {mode}
-                  {i === 1 && <span className="block text-[10px]">(Coming soon)</span>}
-                </button>
-              ))}
-            </div>
           </div>
           <Button
             variant="outline"
