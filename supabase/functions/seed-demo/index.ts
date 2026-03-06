@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
       { id: S.oliver,   name: "Oliver Kim",    studio_id: DEMO_STUDIO_ID, parent_name: "David Kim",      parent_email: "david.kim@example.com",       parent_phone: "+447700900004", level: "Grade 3", age: 11, lesson_day: "Thursday",  lesson_time: "15:00", current_piece: "The Entertainer – Scott Joplin",   notes: "Loves ragtime. Works best with recordings to emulate.", status: "active" },
       { id: S.aisha,    name: "Aisha Patel",   studio_id: DEMO_STUDIO_ID, parent_name: "Priya Patel",    parent_email: "priya.patel@example.com",     parent_phone: "+447700900005", level: "Grade 5", age: 13, lesson_day: "Friday",    lesson_time: "09:00", current_piece: "Arabesque No. 1 – Debussy",        notes: "Sensitive musicality. Needs to build confidence in performance.", status: "active" },
       { id: S.waitlist, name: "Mia Thompson",  studio_id: DEMO_STUDIO_ID, parent_name: "Rachel Thompson", parent_email: "rachel.t@example.com",       level: "Grade 1", age: 7, status: "waiting" },
-      { id: S.overdue,  name: "Jake Morrison", studio_id: DEMO_STUDIO_ID, parent_name: "Tom Morrison",   parent_email: "tom.morrison@example.com",   parent_phone: "+447700900006", level: "Grade 3", age: 9,  lesson_day: "Friday",    lesson_time: "11:00", current_piece: "Sonatina in C – Clementi", status: "awaiting_payment" },
+      { id: S.overdue,  name: "Jake Morrison", studio_id: DEMO_STUDIO_ID, parent_name: "Tom Morrison",   parent_email: "tom.morrison@example.com",   parent_phone: "+447700900006", level: "Grade 3", age: 9,  lesson_day: "Friday",    lesson_time: "11:00", current_piece: "Sonatina in C – Clementi", status: "paused" },
     ]);
 
     const today = d(0);
