@@ -127,6 +127,12 @@ function ts(dayOffset: number, hour = 10, minute = 0) {
   return dt.toISOString();
 }
 
+// ─── Helper: upsert and throw on error ───────────────────────────────────────
+async function up(client: any, table: string, rows: any[], conflict = "id") {
+  const { error } = await client.from(table).upsert(rows, { onConflict: conflict });
+  if (error) throw new Error(`upsert(${table}): ${error.message}`);
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
