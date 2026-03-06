@@ -46,9 +46,9 @@ const AppSidebar = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { studio } = useStudio();
-  const { setOpen } = useSidebar();
+  const { setOpen, setOpenMobile, isMobile } = useSidebar();
 
-  const closeSidebar = () => setOpen(false);
+  const closeSidebar = () => isMobile ? setOpenMobile(false) : setOpen(false);
 
   const initials = studio?.name
     ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
