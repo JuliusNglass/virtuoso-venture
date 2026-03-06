@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-// @ts-ignore - Users imported for group sessions
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, LogOut, BookOpen, FileText, Download, Send,
   Inbox, Video, Music, Clock, Play, Square, Plus, ListChecks,
-  ChevronRight, MessageCircle, Home, FileIcon
+  ChevronRight, MessageCircle, Home, FileIcon, Users
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
