@@ -84,9 +84,15 @@ Deno.serve(async (req) => {
     const teacherId = await upsertUser(TEACHER_EMAIL, "Alex Rivera");
     const parentId  = await upsertUser(PARENT_EMAIL,  "Sarah Chen");
 
-    // 2. Parent role
-    const { error: roleErr } = await db.from("user_roles").upsert({ user_id: parentId, role: "parent", studio_id: DEMO_STUDIO_ID }, { onConflict: "user_id,role" });
-    if (roleErr) console.warn("role upsert warn:", roleErr.message);
+    // 2. Roles — teacher gets admin (full studio access), parent gets BOTH admin + parent (full demo access + parent portal)
+    for (const [uid, role] of [
+      [teacherId, "admin"],
+      [parentId,  "admin"],
+      [parentId,  "parent"],
+    ] as [string, string][]) {
+      const { error: roleErr } = await db.from("user_roles").upsert({ user_id: uid, role, studio_id: DEMO_STUDIO_ID }, { onConflict: "user_id,role" });
+      if (roleErr) console.warn(`role upsert ${uid}/${role}:`, roleErr.message);
+    }
 
     // 3. Reset if requested
     if (reset) {
