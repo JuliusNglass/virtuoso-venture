@@ -36,6 +36,7 @@ const Settings = () => {
     `Hi there,\n\nHere is the recap for {{student_name}}'s lesson on {{lesson_date}}.\n\n**Notes:**\n{{notes}}\n\n**Homework:**\n{{homework}}\n\nSee you next time!\n`
   );
   const [billingMode, setBillingMode] = useState("per_lesson");
+  const [replyToEmail, setReplyToEmail] = useState("");
   const [templateDirty, setTemplateDirty] = useState(false);
 
   // ── Load persisted template ───────────────────────────────────────────────
