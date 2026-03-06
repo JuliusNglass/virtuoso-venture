@@ -22,6 +22,9 @@ import Messages from "./pages/Messages";
 import Today from "./pages/Today";
 import Settings from "./pages/Settings";
 import Payments from "./pages/Payments";
+import Classes from "./pages/Classes";
+import ClassDetail from "./pages/ClassDetail";
+import SessionMode from "./pages/SessionMode";
 import AppLayout from "./components/AppLayout";
 import VersionChecker from "./components/VersionChecker";
 
@@ -52,6 +55,10 @@ const App = () => (
               <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
               <Route path="/students" element={<AppLayout><Students /></AppLayout>} />
               <Route path="/lessons" element={<AppLayout><Lessons /></AppLayout>} />
+              <Route path="/classes" element={<AppLayout><Classes /></AppLayout>} />
+              <Route path="/classes/:classId" element={<AppLayout><ClassDetail /></AppLayout>} />
+              {/* Session Mode — full-screen, no AppLayout chrome */}
+              <Route path="/class-session/:sessionId" element={<SessionMode />} />
               <Route path="/calendar" element={<AppLayout><CalendarPage /></AppLayout>} />
               <Route path="/repertoire" element={<AppLayout><Repertoire /></AppLayout>} />
               <Route path="/files" element={<AppLayout><Files /></AppLayout>} />
