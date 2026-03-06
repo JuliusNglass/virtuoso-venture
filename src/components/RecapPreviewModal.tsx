@@ -28,6 +28,17 @@ const RecapPreviewModal = ({ open, onClose, student, lessonId, notes, pieces, ho
 
   const sendMutation = useMutation({
     mutationFn: async () => {
+      // Fetch studio reply_to_email if studioId is available
+      let replyTo: string | undefined;
+      if (studioId) {
+        const { data: tpl } = await supabase
+          .from("studio_email_templates" as any)
+          .select("reply_to_email")
+          .eq("studio_id", studioId)
+          .maybeSingle();
+        replyTo = (tpl as any)?.reply_to_email ?? undefined;
+      }
+
       const subject = `Lesson Recap – ${student.name} – ${dateStr}`;
       const bodyHtml = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
