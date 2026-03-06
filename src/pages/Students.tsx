@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle, Send, Copy, Check, Link } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -9,11 +8,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudio } from "@/hooks/useStudio";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import LessonMode from "@/components/LessonMode";
+import { Textarea } from "@/components/ui/textarea";
 
 const levelColors: Record<string, string> = {
   "Grade 1": "bg-green-100 text-green-700",
@@ -43,6 +43,11 @@ const Students = () => {
   const [editStudent, setEditStudent] = useState<any>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [lessonModeStudent, setLessonModeStudent] = useState<any>(null);
+  const [inviteStudent, setInviteStudent] = useState<any>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -108,6 +113,46 @@ const Students = () => {
   const resetForm = () => {
     setNewName(""); setNewAge(""); setNewLevel("Grade 1"); setNewPiece("");
     setNewDay("Monday"); setNewTime(""); setNewParentName(""); setNewParentEmail(""); setNewParentPhone("");
+  };
+
+  const handleInviteParent = async () => {
+    const email = inviteEmail.trim() || inviteStudent?.parent_email;
+    if (!email) {
+      toast({ title: "Please enter a parent email", variant: "destructive" });
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("invite-parent", {
+        body: {
+          parentEmail: email,
+          parentName: inviteStudent?.parent_name,
+          studentName: inviteStudent?.name,
+          studentId: inviteStudent?.id,
+        },
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error || !data?.success) throw new Error(data?.error || error?.message || "Failed");
+      setInviteLink(data.inviteLink);
+      toast({
+        title: data.emailSent ? "Invite sent!" : "Invite link generated",
+        description: data.emailSent
+          ? `Welcome email sent to ${email}`
+          : "No email provider configured — copy the link below to share manually.",
+      });
+    } catch (err: any) {
+      toast({ title: "Failed to send invite", description: err.message, variant: "destructive" });
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleCopyInviteLink = () => {
+    if (!inviteLink) return;
+    navigator.clipboard.writeText(inviteLink);
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 2000);
   };
 
   const handleAdd = (e: React.FormEvent) => {
@@ -230,10 +275,24 @@ const Students = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-2 mt-4 pt-3 border-t border-border/50">
+                    <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border/50">
                       {student.status === "active" && (
                         <Button size="sm" className="flex-1 h-8 text-xs bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold" onClick={() => setLessonModeStudent(student)}>
                           <PlayCircle size={12} className="mr-1" /> Start Lesson
+                        </Button>
+                      )}
+                      {student.parent_email && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 h-8 text-xs"
+                          onClick={() => {
+                            setInviteStudent(student);
+                            setInviteEmail(student.parent_email || "");
+                            setInviteLink(null);
+                          }}
+                        >
+                          <Send size={12} className="mr-1" /> Invite Parent
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" className="flex-1 h-8 text-xs" onClick={() => setEditStudent(student)}>
@@ -436,6 +495,62 @@ const Students = () => {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Parent Dialog */}
+      <Dialog open={!!inviteStudent} onOpenChange={(open) => { if (!open) { setInviteStudent(null); setInviteLink(null); setInviteEmail(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Invite Parent</DialogTitle>
+            <DialogDescription>
+              Send {inviteStudent?.name}'s parent an invite to the parent portal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Parent Email</Label>
+              <Input
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="parent@example.com"
+              />
+            </div>
+
+            <Button
+              className="w-full bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold"
+              onClick={handleInviteParent}
+              disabled={inviteLoading}
+            >
+              <Send size={14} className="mr-2" />
+              {inviteLoading ? "Sending..." : "Send Invite"}
+            </Button>
+
+            {inviteLink && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Link size={12} /> Shareable invite link
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={inviteLink}
+                    readOnly
+                    className="text-xs font-mono truncate"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={handleCopyInviteLink}
+                  >
+                    {inviteCopied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Share this link via WhatsApp or SMS for the parent to access their portal.</p>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
