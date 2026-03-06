@@ -12,14 +12,22 @@ const Index = () => {
     if (!user) { navigate("/auth", { replace: true }); return; }
 
     (async () => {
-      const [{ data: roleRows }, { data: studioData }] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", user.id),
+      const [{ data: roleRows }, { data: ownedStudio }] = await Promise.all([
+        supabase.from("user_roles").select("role, studio_id").eq("user_id", user.id),
         supabase.from("studios").select("id, is_demo").eq("owner_user_id", user.id).maybeSingle(),
       ]);
       const roles = roleRows?.map(r => r.role) ?? [];
-      if (studioData?.is_demo) { navigate("/dashboard", { replace: true }); return; }
-      if (roles.includes("parent") && !roles.includes("admin") && !studioData) { navigate("/parent", { replace: true }); return; }
-      if (!studioData) { navigate("/onboarding", { replace: true }); return; }
+      // Check owned demo studio
+      if (ownedStudio?.is_demo) { navigate("/dashboard", { replace: true }); return; }
+      // Check linked demo studio via roles
+      const linkedStudioIds = (roleRows ?? []).map(r => r.studio_id).filter(Boolean) as string[];
+      if (linkedStudioIds.length > 0) {
+        const { data: demoStudio } = await supabase
+          .from("studios").select("id, is_demo").in("id", linkedStudioIds).eq("is_demo", true).maybeSingle();
+        if (demoStudio) { navigate("/dashboard", { replace: true }); return; }
+      }
+      if (roles.includes("parent") && !roles.includes("admin") && !ownedStudio) { navigate("/parent", { replace: true }); return; }
+      if (!ownedStudio) { navigate("/onboarding", { replace: true }); return; }
       navigate("/dashboard", { replace: true });
     })();
   }, [user, loading, navigate]);
