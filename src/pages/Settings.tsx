@@ -93,6 +93,7 @@ const Settings = () => {
         subject: emailSubject,
         body: emailBody,
         billing_mode: billingMode,
+        reply_to_email: replyToEmail || null,
       };
       const { error } = await (supabase.from("studio_email_templates" as any) as any)
         .upsert(payload, { onConflict: "studio_id" });
