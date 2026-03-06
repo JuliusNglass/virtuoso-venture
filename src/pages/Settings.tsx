@@ -252,6 +252,16 @@ const Settings = () => {
             ))}
           </div>
           <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">Reply-To Email</Label>
+            <Input
+              type="email"
+              value={replyToEmail}
+              onChange={(e) => { setReplyToEmail(e.target.value); setTemplateDirty(true); }}
+              placeholder="your@email.com — parents' replies go here"
+            />
+            <p className="text-xs text-muted-foreground">Leave blank to use the default no-reply address.</p>
+          </div>
+          <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Subject</Label>
             <Input
               value={emailSubject}
