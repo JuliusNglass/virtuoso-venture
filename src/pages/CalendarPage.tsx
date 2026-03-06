@@ -4,17 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, PlayCircle, Plus, Eye, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlayCircle, Plus, Eye, RotateCcw, Users } from "lucide-react";
 import {
   format, startOfMonth, endOfMonth, startOfWeek, addDays,
   isSameMonth, isToday as isTodayFn, parseISO,
 } from "date-fns";
 import LessonMode from "@/components/LessonMode";
 import ScheduleLessonDialog from "@/components/ScheduleLessonDialog";
+import { useNavigate } from "react-router-dom";
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const statusStyles: Record<string, string> = {
+const lessonStatusStyles: Record<string, string> = {
   present:   "bg-emerald-50 border-emerald-200 text-emerald-800",
   cancelled: "bg-muted border-border text-muted-foreground line-through",
   absent:    "bg-red-50 border-red-200 text-red-700",
@@ -30,9 +31,13 @@ const CalendarPage = () => {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const monthStart = format(startOfMonth(currentDate), "yyyy-MM-dd");
   const monthEnd   = format(endOfMonth(currentDate),   "yyyy-MM-dd");
+
+  const monthStartTs = startOfMonth(currentDate).toISOString();
+  const monthEndTs   = endOfMonth(currentDate).toISOString();
 
   const { data: lessons } = useQuery({
     queryKey: ["calendar-lessons", monthStart],
@@ -48,13 +53,28 @@ const CalendarPage = () => {
     },
   });
 
+  const { data: classSessions } = useQuery({
+    queryKey: ["calendar-class-sessions", monthStart],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("class_sessions")
+        .select("*, classes(id, name)")
+        .gte("starts_at", monthStartTs)
+        .lte("starts_at", monthEndTs)
+        .order("starts_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   // Build calendar grid (Mon-Sun)
   const firstDay = startOfMonth(currentDate);
   const calStart = startOfWeek(firstDay, { weekStartsOn: 1 });
   const calDays: Date[] = Array.from({ length: 42 }, (_, i) => addDays(calStart, i));
 
-  const selectedEvents = selectedDay
-    ? (lessons ?? []).filter((l) => l.date === selectedDay)
+  const selectedLessons = selectedDay ? (lessons ?? []).filter((l) => l.date === selectedDay) : [];
+  const selectedSessions = selectedDay
+    ? (classSessions ?? []).filter((s) => format(parseISO(s.starts_at), "yyyy-MM-dd") === selectedDay)
     : [];
 
   const prevMonth = () => setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
@@ -124,9 +144,11 @@ const CalendarPage = () => {
                 {calDays.map((day, i) => {
                   const dateStr  = format(day, "yyyy-MM-dd");
                   const dayLessons = (lessons ?? []).filter((l) => l.date === dateStr);
+                  const daySessions = (classSessions ?? []).filter((s) => format(parseISO(s.starts_at), "yyyy-MM-dd") === dateStr);
                   const inMonth  = isSameMonth(day, currentDate);
                   const today    = isTodayFn(day);
                   const selected = selectedDay === dateStr;
+                  const totalEvents = dayLessons.length + daySessions.length;
 
                   return (
                     <div
@@ -138,16 +160,25 @@ const CalendarPage = () => {
                         {format(day, "d")}
                       </span>
                       <div className="space-y-0.5 mt-0.5">
-                        {dayLessons.slice(0, 2).map((l, j) => (
+                        {dayLessons.slice(0, 1).map((l, j) => (
                           <div
                             key={j}
-                            className={`text-[10px] px-1 py-0.5 rounded truncate border ${statusStyles[l.attendance] ?? statusStyles.present}`}
+                            className={`text-[10px] px-1 py-0.5 rounded truncate border ${lessonStatusStyles[l.attendance] ?? lessonStatusStyles.present}`}
                           >
                             {(l.students as any)?.name?.split(" ")[0]}
                           </div>
                         ))}
-                        {dayLessons.length > 2 && (
-                          <div className="text-[10px] text-muted-foreground px-1">+{dayLessons.length - 2}</div>
+                        {daySessions.slice(0, 1).map((s, j) => (
+                          <div
+                            key={`s-${j}`}
+                            className="text-[10px] px-1 py-0.5 rounded truncate border bg-indigo-50 border-indigo-200 text-indigo-800 flex items-center gap-0.5"
+                          >
+                            <Users size={8} className="shrink-0" />
+                            {(s.classes as any)?.name?.split(" ")[0]}
+                          </div>
+                        ))}
+                        {totalEvents > 2 && (
+                          <div className="text-[10px] text-muted-foreground px-1">+{totalEvents - 2}</div>
                         )}
                       </div>
                     </div>
@@ -160,7 +191,8 @@ const CalendarPage = () => {
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Completed</span>
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-destructive" /> No-Show</span>
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-muted-foreground" /> Cancelled</span>
-                <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-400" /> Scheduled</span>
+                <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-400" /> Scheduled (1:1)</span>
+                <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-indigo-400" /> Group Session</span>
               </div>
             </CardContent>
           </Card>
@@ -184,21 +216,23 @@ const CalendarPage = () => {
                   <Plus size={14} />
                 </Button>
               </div>
-              {selectedEvents.length === 0 ? (
+
+              {selectedLessons.length === 0 && selectedSessions.length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-sm text-muted-foreground">No lessons on this day</p>
+                  <p className="text-sm text-muted-foreground">No events on this day</p>
                   <Button
                     variant="outline"
                     size="sm"
                     className="mt-3 text-xs"
                     onClick={() => setScheduleOpen(true)}
                   >
-                    <Plus size={12} className="mr-1" /> Schedule one
+                    <Plus size={12} className="mr-1" /> Schedule lesson
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {selectedEvents.map((l) => {
+                  {/* 1:1 Lessons */}
+                  {selectedLessons.map((l) => {
                     const student = l.students as any;
                     const initials = student?.name?.split(" ").map((n: string) => n[0]).join("").slice(0, 2) ?? "?";
                     const isScheduled = l.attendance === "scheduled";
@@ -208,7 +242,7 @@ const CalendarPage = () => {
                     return (
                       <div
                         key={l.id}
-                        className={`p-3 rounded-xl border transition-colors ${statusStyles[l.attendance] ?? ""}`}
+                        className={`p-3 rounded-xl border transition-colors ${lessonStatusStyles[l.attendance] ?? ""}`}
                       >
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center text-charcoal font-bold text-xs shrink-0">
@@ -220,52 +254,74 @@ const CalendarPage = () => {
                           </div>
                         </div>
 
-                        {/* Actions per status */}
                         {isScheduled && (
                           <Button
                             size="sm"
                             className="w-full mt-2 h-8 bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold text-xs font-semibold"
                             onClick={() => {
-                              setLessonModeStudent({
-                                id: student.id,
-                                name: student.name,
-                                level: student.level,
-                                parent_email: student.parent_email,
-                              });
+                              setLessonModeStudent({ id: student.id, name: student.name, level: student.level, parent_email: student.parent_email });
                               setExistingLesson(l);
                             }}
                           >
                             <PlayCircle size={13} className="mr-1.5" /> Start Lesson
                           </Button>
                         )}
-
                         {isDone && (
                           <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full mt-2 h-8 text-xs"
+                            size="sm" variant="outline" className="w-full mt-2 h-8 text-xs"
                             onClick={() => {
-                              setLessonModeStudent({
-                                id: student.id,
-                                name: student.name,
-                                level: student.level,
-                                parent_email: student.parent_email,
-                              });
+                              setLessonModeStudent({ id: student.id, name: student.name, level: student.level, parent_email: student.parent_email });
                               setExistingLesson(l);
                             }}
                           >
                             <Eye size={13} className="mr-1.5" /> View Lesson
                           </Button>
                         )}
-
                         {isCancelled && (
                           <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full mt-2 h-8 text-xs"
+                            size="sm" variant="outline" className="w-full mt-2 h-8 text-xs"
                             onClick={() => handleRestoreLesson(l.id)}
                           >
                             <RotateCcw size={13} className="mr-1.5" /> Restore
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Group Sessions */}
+                  {selectedSessions.map((s) => {
+                    const cls = s.classes as any;
+                    const isScheduled = s.status === "scheduled";
+                    const isCompleted = s.status === "completed";
+                    return (
+                      <div key={s.id} className="p-3 rounded-xl border border-indigo-200 bg-indigo-50/50">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                            <Users size={14} className="text-indigo-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-indigo-900 truncate">{cls?.name}</p>
+                            <p className="text-xs text-indigo-600">
+                              {format(parseISO(s.starts_at), "HH:mm")} – {format(parseISO(s.ends_at), "HH:mm")}
+                            </p>
+                          </div>
+                        </div>
+                        {isScheduled && (
+                          <Button
+                            size="sm"
+                            className="w-full mt-2 h-8 bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold text-xs font-semibold"
+                            onClick={() => navigate(`/class-session/${s.id}`)}
+                          >
+                            <PlayCircle size={13} className="mr-1.5" /> Start Session
+                          </Button>
+                        )}
+                        {isCompleted && (
+                          <Button
+                            size="sm" variant="outline" className="w-full mt-2 h-8 text-xs text-indigo-700 border-indigo-200"
+                            onClick={() => navigate(`/class-session/${s.id}`)}
+                          >
+                            <Eye size={13} className="mr-1.5" /> View Session
                           </Button>
                         )}
                       </div>
