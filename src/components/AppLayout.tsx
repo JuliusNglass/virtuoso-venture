@@ -6,6 +6,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +36,7 @@ const navItems = [
   { path: "/lessons",    label: "Lessons",         icon: BookOpen },
   { path: "/classes",    label: "Classes",         icon: GraduationCap },
   { path: "/calendar",   label: "Calendar",        icon: Calendar },
-  { path: "/messages",   label: "Messages",        icon: MessageCircle },
+  { path: "/messages",   label: "Messages",        icon: MessageCircle, badgeKey: "messages" },
   { path: "/repertoire", label: "Music Library",   icon: Music },
   { path: "/files",      label: "Files & Scores",  icon: FileText },
   { path: "/requests",   label: "Applications",    icon: UserPlus },
@@ -51,6 +53,31 @@ const AppSidebar = () => {
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
 
   const closeSidebar = () => isMobile ? setOpenMobile(false) : setOpen(false);
+
+  // Unread messages count (messages not sent by the current teacher)
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["unread-messages", studio?.id],
+    queryFn: async () => {
+      if (!studio?.id || !user?.id) return 0;
+      // Count threads that have at least one message from a parent (not from this user)
+      const { data: threads } = await supabase
+        .from("message_threads")
+        .select("id")
+        .eq("studio_id", studio.id);
+      if (!threads?.length) return 0;
+      const threadIds = threads.map(t => t.id);
+      const { count } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .in("thread_id", threadIds)
+        .neq("sender_user_id", user.id)
+        // Only count messages from last 7 days as "unread indicators"
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+      return count ?? 0;
+    },
+    enabled: !!studio?.id && !!user?.id,
+    refetchInterval: 30_000, // poll every 30s
+  });
 
   const initials = studio?.name
     ? studio.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -78,8 +105,9 @@ const AppSidebar = () => {
       {/* Nav */}
       <SidebarContent className="px-3 py-3">
         <SidebarMenu className="space-y-0.5">
-          {navItems.map(({ path, label, icon: Icon }) => {
+          {navItems.map(({ path, label, icon: Icon, badgeKey }) => {
             const isActive = location.pathname === path;
+            const showBadge = badgeKey === "messages" && unreadCount > 0 && !isActive;
             return (
               <SidebarMenuItem key={path}>
                 <SidebarMenuButton
@@ -94,7 +122,14 @@ const AppSidebar = () => {
                   `}
                 >
                   <Link to={path} onClick={closeSidebar} className="flex items-center gap-3 px-3 py-2.5">
-                    <Icon size={18} className="shrink-0" />
+                    <div className="relative shrink-0">
+                      <Icon size={18} />
+                      {showBadge && (
+                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-sm">{label}</span>
                   </Link>
                 </SidebarMenuButton>

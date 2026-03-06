@@ -38,7 +38,8 @@ const COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#f59e0b", "#8b5cf6"];
 const ScoreViewer = ({ open, onOpenChange, fileUrl, fileName, fileId }: ScoreViewerProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.2);
+  const [scale, setScale] = useState(1.0);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
   const [annotating, setAnnotating] = useState(false);
   const [drawing, setDrawing] = useState(false);
   const [currentColor, setCurrentColor] = useState(COLORS[0]);
@@ -49,6 +50,22 @@ const ScoreViewer = ({ open, onOpenChange, fileUrl, fileName, fileId }: ScoreVie
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Measure container width so PDF fits the viewport
+  useEffect(() => {
+    if (!open) return;
+    const measure = () => {
+      if (containerRef.current) {
+        // subtract padding (32px each side)
+        setContainerWidth(containerRef.current.clientWidth - 32);
+      }
+    };
+    // Small delay to let the dialog render
+    const t = setTimeout(measure, 150);
+    const ro = new ResizeObserver(measure);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => { clearTimeout(t); ro.disconnect(); };
+  }, [open]);
 
   // Load annotations for current page
   const { data: savedAnnotations } = useQuery({
@@ -200,6 +217,9 @@ const ScoreViewer = ({ open, onOpenChange, fileUrl, fileName, fileId }: ScoreVie
     setNumPages(numPages);
   };
 
+  // Effective page width: if containerWidth is known use it, otherwise fall back to scale * default
+  const pageWidth = containerWidth > 0 ? Math.floor(containerWidth * scale) : undefined;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] flex flex-col p-0">
@@ -224,11 +244,11 @@ const ScoreViewer = ({ open, onOpenChange, fileUrl, fileName, fileId }: ScoreVie
           <div className="h-5 w-px bg-border" />
 
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => setScale((s) => Math.max(0.5, s - 0.2))}>
+            <Button variant="ghost" size="icon" onClick={() => setScale((s) => Math.max(0.3, s - 0.1))}>
               <ZoomOut size={16} />
             </Button>
             <span className="text-xs font-mono min-w-[40px] text-center">{Math.round(scale * 100)}%</span>
-            <Button variant="ghost" size="icon" onClick={() => setScale((s) => Math.min(3, s + 0.2))}>
+            <Button variant="ghost" size="icon" onClick={() => setScale((s) => Math.min(3, s + 0.1))}>
               <ZoomIn size={16} />
             </Button>
           </div>
@@ -276,16 +296,28 @@ const ScoreViewer = ({ open, onOpenChange, fileUrl, fileName, fileId }: ScoreVie
           )}
         </div>
 
-        {/* PDF Content */}
+        {/* PDF Content — fills remaining height, scrollable */}
         <div className="flex-1 overflow-auto bg-muted/20 flex justify-center p-4" ref={containerRef}>
-          <div className="relative inline-block">
-            <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess} loading={<div className="flex items-center justify-center p-12"><Loader2 className="animate-spin text-muted-foreground" size={32} /></div>}>
-              <Page pageNumber={pageNumber} scale={scale} onRenderSuccess={syncCanvas} />
+          <div className="relative inline-block w-full">
+            <Document
+              file={fileUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              loading={
+                <div className="flex items-center justify-center p-12">
+                  <Loader2 className="animate-spin text-muted-foreground" size={32} />
+                </div>
+              }
+            >
+              <Page
+                pageNumber={pageNumber}
+                width={pageWidth}
+                onRenderSuccess={syncCanvas}
+              />
             </Document>
             {/* Annotation overlay canvas */}
             <canvas
               ref={canvasRef}
-              className={`absolute top-0 left-0 ${annotating ? (erasing ? "cursor-crosshair" : "cursor-crosshair") : "pointer-events-none"}`}
+              className={`absolute top-0 left-0 ${annotating ? "cursor-crosshair" : "pointer-events-none"}`}
               style={{ zIndex: 10 }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}

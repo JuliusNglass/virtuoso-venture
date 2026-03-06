@@ -904,6 +904,7 @@ export type Database = {
           created_at: string
           current_piece: string | null
           id: string
+          internal_label: string | null
           lesson_day: string | null
           lesson_request_id: string | null
           lesson_time: string | null
@@ -924,6 +925,7 @@ export type Database = {
           created_at?: string
           current_piece?: string | null
           id?: string
+          internal_label?: string | null
           lesson_day?: string | null
           lesson_request_id?: string | null
           lesson_time?: string | null
@@ -944,6 +946,7 @@ export type Database = {
           created_at?: string
           current_piece?: string | null
           id?: string
+          internal_label?: string | null
           lesson_day?: string | null
           lesson_request_id?: string | null
           lesson_time?: string | null
@@ -971,6 +974,44 @@ export type Database = {
             foreignKeyName: "students_studio_id_fkey"
             columns: ["studio_id"]
             isOneToOne: false
+            referencedRelation: "studios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studio_email_templates: {
+        Row: {
+          billing_mode: string
+          body: string
+          created_at: string
+          id: string
+          studio_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          billing_mode?: string
+          body?: string
+          created_at?: string
+          id?: string
+          studio_id: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_mode?: string
+          body?: string
+          created_at?: string
+          id?: string
+          studio_id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studio_email_templates_studio_id_fkey"
+            columns: ["studio_id"]
+            isOneToOne: true
             referencedRelation: "studios"
             referencedColumns: ["id"]
           },
