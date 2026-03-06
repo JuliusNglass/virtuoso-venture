@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, PlayCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlayCircle, Plus, Eye, RotateCcw } from "lucide-react";
 import {
   format, startOfMonth, endOfMonth, startOfWeek, addDays,
   isSameMonth, isToday as isTodayFn, parseISO,
 } from "date-fns";
 import LessonMode from "@/components/LessonMode";
+import ScheduleLessonDialog from "@/components/ScheduleLessonDialog";
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -16,6 +18,7 @@ const statusStyles: Record<string, string> = {
   present:   "bg-emerald-50 border-emerald-200 text-emerald-800",
   cancelled: "bg-muted border-border text-muted-foreground line-through",
   absent:    "bg-red-50 border-red-200 text-red-700",
+  scheduled: "bg-blue-50 border-blue-200 text-blue-800",
 };
 
 const CalendarPage = () => {
@@ -23,6 +26,10 @@ const CalendarPage = () => {
   const [selectedDay, setSelectedDay] = useState<string | null>(format(new Date(), "yyyy-MM-dd"));
   const [lessonModeStudent, setLessonModeStudent] = useState<any>(null);
   const [existingLesson, setExistingLesson] = useState<any>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const monthStart = format(startOfMonth(currentDate), "yyyy-MM-dd");
   const monthEnd   = format(endOfMonth(currentDate),   "yyyy-MM-dd");
@@ -53,6 +60,19 @@ const CalendarPage = () => {
   const prevMonth = () => setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
 
+  const handleRestoreLesson = async (lessonId: string) => {
+    const { error } = await supabase
+      .from("lessons")
+      .update({ attendance: "scheduled" })
+      .eq("id", lessonId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["calendar-lessons"] });
+      toast({ title: "Lesson restored", description: "Marked as scheduled." });
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -60,9 +80,18 @@ const CalendarPage = () => {
           <h1 className="font-heading text-3xl font-bold">Calendar</h1>
           <p className="text-muted-foreground mt-1 text-sm">View and manage your lesson schedule.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => { setCurrentDate(new Date()); setSelectedDay(format(new Date(), "yyyy-MM-dd")); }}>
-          Today
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="bg-gradient-gold text-charcoal hover:opacity-90 font-semibold shadow-gold"
+            onClick={() => setScheduleOpen(true)}
+          >
+            <Plus size={14} className="mr-1.5" /> Schedule Lesson
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => { setCurrentDate(new Date()); setSelectedDay(format(new Date(), "yyyy-MM-dd")); }}>
+            Today
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -127,10 +156,11 @@ const CalendarPage = () => {
               </div>
 
               {/* Legend */}
-              <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+              <div className="flex gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Completed</span>
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-destructive" /> No-Show</span>
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-muted-foreground" /> Cancelled</span>
+                <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-400" /> Scheduled</span>
               </div>
             </CardContent>
           </Card>
@@ -140,19 +170,41 @@ const CalendarPage = () => {
         <div>
           <Card className="border-border/50">
             <CardContent className="p-4">
-              <h4 className="font-heading font-semibold mb-3">
-                {selectedDay ? format(parseISO(selectedDay), "EEEE, d MMMM") : "Select a day"}
-              </h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-heading font-semibold">
+                  {selectedDay ? format(parseISO(selectedDay), "EEEE, d MMMM") : "Select a day"}
+                </h4>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-7 w-7 shrink-0"
+                  title="Schedule lesson for this day"
+                  onClick={() => setScheduleOpen(true)}
+                >
+                  <Plus size={14} />
+                </Button>
+              </div>
               {selectedEvents.length === 0 ? (
                 <div className="py-8 text-center">
                   <p className="text-sm text-muted-foreground">No lessons on this day</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 text-xs"
+                    onClick={() => setScheduleOpen(true)}
+                  >
+                    <Plus size={12} className="mr-1" /> Schedule one
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {selectedEvents.map((l) => {
                     const student = l.students as any;
                     const initials = student?.name?.split(" ").map((n: string) => n[0]).join("").slice(0, 2) ?? "?";
-                    const isDone = l.attendance === "present";
+                    const isScheduled = l.attendance === "scheduled";
+                    const isDone = l.attendance === "present" || l.attendance === "absent";
+                    const isCancelled = l.attendance === "cancelled";
+
                     return (
                       <div
                         key={l.id}
@@ -167,7 +219,9 @@ const CalendarPage = () => {
                             <p className="text-xs text-muted-foreground">{student?.lesson_time ?? ""}</p>
                           </div>
                         </div>
-                        {!isDone && (
+
+                        {/* Actions per status */}
+                        {isScheduled && (
                           <Button
                             size="sm"
                             className="w-full mt-2 h-8 bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold text-xs font-semibold"
@@ -184,6 +238,36 @@ const CalendarPage = () => {
                             <PlayCircle size={13} className="mr-1.5" /> Start Lesson
                           </Button>
                         )}
+
+                        {isDone && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full mt-2 h-8 text-xs"
+                            onClick={() => {
+                              setLessonModeStudent({
+                                id: student.id,
+                                name: student.name,
+                                level: student.level,
+                                parent_email: student.parent_email,
+                              });
+                              setExistingLesson(l);
+                            }}
+                          >
+                            <Eye size={13} className="mr-1.5" /> View Lesson
+                          </Button>
+                        )}
+
+                        {isCancelled && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full mt-2 h-8 text-xs"
+                            onClick={() => handleRestoreLesson(l.id)}
+                          >
+                            <RotateCcw size={13} className="mr-1.5" /> Restore
+                          </Button>
+                        )}
                       </div>
                     );
                   })}
@@ -193,6 +277,13 @@ const CalendarPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Schedule Lesson Dialog */}
+      <ScheduleLessonDialog
+        open={scheduleOpen}
+        onClose={() => setScheduleOpen(false)}
+        defaultDate={selectedDay ?? undefined}
+      />
 
       {/* Lesson Mode */}
       {lessonModeStudent && (
