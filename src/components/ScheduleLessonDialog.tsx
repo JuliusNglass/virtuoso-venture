@@ -42,7 +42,7 @@ const ScheduleLessonDialog = ({ open, onClose, defaultDate }: ScheduleLessonDial
   const [loading, setLoading] = useState(false);
 
   const { data: students } = useQuery({
-    queryKey: ["active-students-schedule", studioId],
+    queryKey: ["active-students-schedule", studio?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
