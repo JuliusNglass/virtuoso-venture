@@ -39,6 +39,7 @@ function generateRecurringDates(lessonDay: string, lessonTime: string, count = 4
 const UpcomingLessons = ({ studentId }: UpcomingLessonsProps) => {
   const today = new Date().toISOString().split("T")[0];
 
+  // Only fetch scheduled (future) lessons — not logged lessons
   const { data: lessons, isLoading: lessonsLoading } = useQuery({
     queryKey: ["upcoming-lessons", studentId],
     queryFn: async () => {
@@ -46,6 +47,7 @@ const UpcomingLessons = ({ studentId }: UpcomingLessonsProps) => {
         .from("lessons")
         .select("*, students(name, lesson_time, lesson_day)")
         .eq("student_id", studentId)
+        .eq("attendance", "scheduled")
         .gte("date", today)
         .order("date", { ascending: true })
         .limit(4);
@@ -87,13 +89,13 @@ const UpcomingLessons = ({ studentId }: UpcomingLessonsProps) => {
 
   if (lessonsLoading) return null;
 
-  const hasRealLessons = lessons && lessons.length > 0;
-  const isRecurring = !hasRealLessons && student?.lesson_day && student?.lesson_time;
+  const hasScheduledLessons = lessons && lessons.length > 0;
+  const isRecurring = !hasScheduledLessons && student?.lesson_day && student?.lesson_time;
   const recurringDates = isRecurring
     ? generateRecurringDates(student!.lesson_day!, student!.lesson_time!)
     : [];
 
-  if (!hasRealLessons && !isRecurring) return null;
+  if (!hasScheduledLessons && !isRecurring) return null;
 
   return (
     <section className="space-y-3">
@@ -107,14 +109,14 @@ const UpcomingLessons = ({ studentId }: UpcomingLessonsProps) => {
       </h2>
 
       <div className="space-y-2">
-        {hasRealLessons
+        {hasScheduledLessons
           ? lessons!.map((lesson) => {
               const s = (lesson as any).students;
               const [h, m] = (s?.lesson_time || "10:00").split(":").map(Number);
-              const d = new Date(lesson.date);
+              const d = new Date(lesson.date + "T00:00:00");
               d.setHours(h, m, 0, 0);
               return (
-                <Card key={lesson.id} className="border-border/50">
+                <Card key={lesson.id} className="border-blue-200/60 bg-blue-50/30">
                   <CardContent className="p-3.5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
