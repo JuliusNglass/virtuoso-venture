@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Edit, Trash2, Phone, Mail, Calendar, UserPlus, PlayCircle, Send, Copy, Check, Link } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -9,11 +8,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudio } from "@/hooks/useStudio";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import LessonMode from "@/components/LessonMode";
+import { Textarea } from "@/components/ui/textarea";
 
 const levelColors: Record<string, string> = {
   "Grade 1": "bg-green-100 text-green-700",
