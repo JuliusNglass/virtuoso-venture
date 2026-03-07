@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Settings2, CreditCard, Mail, Building2, CheckCircle2, AlertCircle, Copy, FlaskConical, Loader2
+  Settings2, CreditCard, Mail, Building2, CheckCircle2, AlertCircle, Copy, FlaskConical, Loader2, Link2
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -39,6 +39,11 @@ const Settings = () => {
   const [replyToEmail, setReplyToEmail] = useState("");
   const [templateDirty, setTemplateDirty] = useState(false);
 
+  // ── Payment links state ───────────────────────────────────────────────────
+  const [stripeLink, setStripeLink] = useState("");
+  const [paystackLink, setPaystackLink] = useState("");
+  const [paymentLinksDirty, setPaymentLinksDirty] = useState(false);
+
   // ── Load persisted template ───────────────────────────────────────────────
   const { data: savedTemplate } = useQuery({
     queryKey: ["studio-email-template", studio?.id],
@@ -54,6 +59,21 @@ const Settings = () => {
     enabled: !!studio?.id,
   });
 
+  // ── Load studio payment links ─────────────────────────────────────────────
+  const { data: studioData } = useQuery({
+    queryKey: ["studio-payment-links", studio?.id],
+    queryFn: async () => {
+      if (!studio?.id) return null;
+      const { data } = await supabase
+        .from("studios")
+        .select("payment_link_stripe, payment_link_paystack")
+        .eq("id", studio.id)
+        .maybeSingle();
+      return data as any;
+    },
+    enabled: !!studio?.id,
+  });
+
   useEffect(() => {
     if (savedTemplate) {
       setEmailSubject(savedTemplate.subject);
@@ -62,6 +82,13 @@ const Settings = () => {
       setReplyToEmail(savedTemplate.reply_to_email ?? "");
     }
   }, [savedTemplate]);
+
+  useEffect(() => {
+    if (studioData) {
+      setStripeLink(studioData.payment_link_stripe ?? "");
+      setPaystackLink(studioData.payment_link_paystack ?? "");
+    }
+  }, [studioData]);
 
   useEffect(() => {
     setStudioName(studio?.name ?? "");
@@ -80,6 +107,27 @@ const Settings = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["studio"] });
       toast({ title: "Studio profile saved ✓" });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  // ── Save payment links ────────────────────────────────────────────────────
+  const savePaymentLinksMutation = useMutation({
+    mutationFn: async () => {
+      if (!studio?.id) return;
+      const { error } = await supabase
+        .from("studios")
+        .update({
+          payment_link_stripe: stripeLink.trim() || null,
+          payment_link_paystack: paystackLink.trim() || null,
+        } as any)
+        .eq("id", studio.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["studio-payment-links", studio?.id] });
+      setPaymentLinksDirty(false);
+      toast({ title: "Payment links saved ✓" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -228,6 +276,64 @@ const Settings = () => {
         </CardContent>
       </Card>
 
+      {/* Payment Links */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="font-heading text-base flex items-center gap-2">
+            <Link2 size={16} className="text-primary" /> Payment Links
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Paste a payment link from Stripe or Paystack. Parents will see a <strong>Pay Now</strong> button, and you can share it instantly via WhatsApp or email from the Payments page.
+          </p>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#635BFF]/10 text-[#635BFF] font-bold text-[10px]">
+                Stripe
+              </span>
+              Stripe Payment Link
+            </Label>
+            <Input
+              type="url"
+              value={stripeLink}
+              onChange={(e) => { setStripeLink(e.target.value); setPaymentLinksDirty(true); }}
+              placeholder="https://buy.stripe.com/..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Create at <a href="https://dashboard.stripe.com/payment-links" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">dashboard.stripe.com/payment-links</a>
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#00C3F7]/10 text-[#008aad] font-bold text-[10px]">
+                Paystack
+              </span>
+              Paystack Payment Link
+            </Label>
+            <Input
+              type="url"
+              value={paystackLink}
+              onChange={(e) => { setPaystackLink(e.target.value); setPaymentLinksDirty(true); }}
+              placeholder="https://paystack.com/pay/..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Create at <a href="https://dashboard.paystack.com/#/payment-pages" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">dashboard.paystack.com</a>
+            </p>
+          </div>
+
+          <Button
+            className="bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold"
+            onClick={() => savePaymentLinksMutation.mutate()}
+            disabled={savePaymentLinksMutation.isPending || !paymentLinksDirty}
+          >
+            {savePaymentLinksMutation.isPending ? <><Loader2 size={14} className="mr-2 animate-spin" /> Saving…</> : "Save Payment Links"}
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Email Recap Template */}
       <Card className="border-border/50">
         <CardHeader className="pb-3">
@@ -305,34 +411,6 @@ const Settings = () => {
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Stripe */}
-      <Card className="border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="font-heading text-base flex items-center gap-2">
-            <CreditCard size={16} className="text-primary" /> Stripe Payments
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-xl border border-border/50 p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold">Stripe Connection</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Connect Stripe to enable invoices and subscriptions for parents.
-              </p>
-            </div>
-            <Badge variant="outline" className="text-muted-foreground">
-              <AlertCircle size={11} className="mr-1" /> Not connected
-            </Badge>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => toast({ title: "Stripe setup coming soon", description: "Connect via the Payments page once Stripe is enabled." })}
-          >
-            <CreditCard size={14} className="mr-2" /> Connect Stripe
-          </Button>
         </CardContent>
       </Card>
     </div>

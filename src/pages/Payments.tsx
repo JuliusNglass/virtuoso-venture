@@ -1,15 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useStudio } from "@/hooks/useStudio";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertCircle, CreditCard, Download, MessageCircle, DollarSign, Users, TrendingUp, Settings2
+  AlertCircle, Download, MessageCircle, DollarSign, Users, TrendingUp, Settings2, Copy, Link2, ExternalLink
 } from "lucide-react";
 
 const Payments = () => {
   const navigate = useNavigate();
+  const { studio } = useStudio();
+  const { toast } = useToast();
 
   const { data: students } = useQuery({
     queryKey: ["payments-students"],
@@ -23,15 +27,51 @@ const Payments = () => {
     },
   });
 
+  // Load studio payment links
+  const { data: studioLinks } = useQuery({
+    queryKey: ["studio-payment-links", studio?.id],
+    queryFn: async () => {
+      if (!studio?.id) return null;
+      const { data } = await supabase
+        .from("studios")
+        .select("payment_link_stripe, payment_link_paystack")
+        .eq("id", studio.id)
+        .maybeSingle();
+      return data as any;
+    },
+    enabled: !!studio?.id,
+  });
+
   const overdue = students?.filter((s) => s.status === "awaiting_payment") ?? [];
   const active = students?.filter((s) => s.status === "active") ?? [];
 
+  const activePaymentLink: string | null =
+    studioLinks?.payment_link_stripe || studioLinks?.payment_link_paystack || null;
+  const hasStripe = !!studioLinks?.payment_link_stripe;
+  const hasPaystack = !!studioLinks?.payment_link_paystack;
+
   const openWhatsApp = (phone: string | null | undefined, name: string) => {
     if (!phone) return;
+    const paymentPart = activePaymentLink
+      ? `\n\nYou can pay here: ${activePaymentLink}`
+      : "";
     const msg = encodeURIComponent(
-      `Hi! This is a friendly reminder that your payment for ${name}'s lessons is overdue. Please let me know if you have any questions.`
+      `Hi! This is a friendly reminder that your payment for ${name}'s lessons is overdue.${paymentPart} Please let me know if you have any questions.`
     );
     window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=${msg}`, "_blank");
+  };
+
+  const sendPaymentEmail = (email: string | null | undefined, name: string) => {
+    if (!email) return;
+    const paymentPart = activePaymentLink
+      ? `\n\nYou can pay securely here: ${activePaymentLink}`
+      : "";
+    window.location.href = `mailto:${email}?subject=Payment reminder&body=Hi, this is a reminder that payment for ${name}'s lessons is overdue.${paymentPart}`;
+  };
+
+  const copyPaymentLink = (link: string) => {
+    navigator.clipboard.writeText(link);
+    toast({ title: "Payment link copied ✓" });
   };
 
   return (
@@ -39,7 +79,7 @@ const Payments = () => {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-bold">Payments</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Track overdue balances and manage invoices.</p>
+          <p className="text-muted-foreground mt-1 text-sm">Track overdue balances and manage payment links.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>
@@ -90,21 +130,62 @@ const Payments = () => {
         </Card>
       </div>
 
-      {/* Stripe notice */}
-      <Card className="border-amber-300/50 bg-amber-50/30">
-        <CardContent className="p-4 flex gap-3">
-          <CreditCard size={18} className="text-amber-600 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-amber-800">Stripe not connected</p>
-            <p className="text-xs text-amber-700 mt-0.5">
-              Connect Stripe in Settings to enable real invoices, subscriptions, and online payment links for parents.
-            </p>
-          </div>
-          <Button size="sm" variant="outline" className="shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100" onClick={() => navigate("/settings")}>
-            Connect
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Payment Links banner */}
+      {(hasStripe || hasPaystack) ? (
+        <Card className="border-emerald-300/50 bg-emerald-50/20">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Link2 size={15} className="text-emerald-600" />
+              <p className="text-sm font-semibold text-emerald-800">Payment links ready</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {hasStripe && (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0 rounded-xl border border-emerald-200/80 bg-white/60 px-3 py-2">
+                  <span className="text-xs font-bold text-[#635BFF] shrink-0">Stripe</span>
+                  <span className="text-xs text-muted-foreground truncate flex-1">{studioLinks.payment_link_stripe}</span>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyPaymentLink(studioLinks.payment_link_stripe)}>
+                      <Copy size={11} />
+                    </Button>
+                    <a href={studioLinks.payment_link_stripe} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0"><ExternalLink size={11} /></Button>
+                    </a>
+                  </div>
+                </div>
+              )}
+              {hasPaystack && (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0 rounded-xl border border-emerald-200/80 bg-white/60 px-3 py-2">
+                  <span className="text-xs font-bold text-[#008aad] shrink-0">Paystack</span>
+                  <span className="text-xs text-muted-foreground truncate flex-1">{studioLinks.payment_link_paystack}</span>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyPaymentLink(studioLinks.payment_link_paystack)}>
+                      <Copy size={11} />
+                    </Button>
+                    <a href={studioLinks.payment_link_paystack} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0"><ExternalLink size={11} /></Button>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-amber-300/50 bg-amber-50/30">
+          <CardContent className="p-4 flex gap-3">
+            <Link2 size={18} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-800">No payment link configured</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Add a Stripe or Paystack payment link in Settings so parents can pay with one tap.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100" onClick={() => navigate("/settings")}>
+              Set up
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Money Risk list */}
       <Card className="border-border/50">
@@ -150,6 +231,19 @@ const Payments = () => {
                       Overdue
                     </Badge>
                     <div className="flex gap-1.5 shrink-0">
+                      {/* Copy pay link */}
+                      {activePaymentLink && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0 border-primary/30 text-primary hover:bg-primary/5"
+                          onClick={() => copyPaymentLink(activePaymentLink)}
+                          title="Copy payment link"
+                        >
+                          <Copy size={13} />
+                        </Button>
+                      )}
+                      {/* WhatsApp */}
                       {student.parent_phone && (
                         <Button
                           size="sm"
@@ -161,14 +255,17 @@ const Payments = () => {
                           <MessageCircle size={13} />
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 px-2 text-xs"
-                        onClick={() => window.location.href = `mailto:${student.parent_email}?subject=Payment reminder&body=Hi, this is a reminder that payment for ${student.name}'s lessons is overdue.`}
-                      >
-                        Email
-                      </Button>
+                      {/* Email */}
+                      {student.parent_email && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => sendPaymentEmail(student.parent_email, student.name)}
+                        >
+                          Email
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
