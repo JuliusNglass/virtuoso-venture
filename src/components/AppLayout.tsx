@@ -53,7 +53,7 @@ const adminOnlyItems = [
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, role } = useAuth();
   const { studio } = useStudio();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
 
