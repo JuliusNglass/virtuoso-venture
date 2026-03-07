@@ -449,9 +449,16 @@ const MOCKUP_TABS = [
 export default function SalesPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [founderSubmitted, setFounderSubmitted] = useState(false);
+  const [founderLoading, setFounderLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const form = useForm<LeadForm>({
+    resolver: zodResolver(leadSchema),
+    defaultValues: { name: "", email: "" },
+  });
+
+  const founderForm = useForm<LeadForm>({
     resolver: zodResolver(leadSchema),
     defaultValues: { name: "", email: "" },
   });
