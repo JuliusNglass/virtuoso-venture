@@ -17,18 +17,17 @@ const Index = () => {
         supabase.from("studios").select("id, is_demo").eq("owner_user_id", user.id).maybeSingle(),
       ]);
       const roles = roleRows?.map(r => r.role) ?? [];
-      // Check owned demo studio
-      if (ownedStudio?.is_demo) { navigate("/dashboard", { replace: true }); return; }
-      // Check linked demo studio via roles
-      const linkedStudioIds = (roleRows ?? []).map(r => r.studio_id).filter(Boolean) as string[];
-      if (linkedStudioIds.length > 0) {
-        const { data: demoStudio } = await supabase
-          .from("studios").select("id, is_demo").in("id", linkedStudioIds).eq("is_demo", true).maybeSingle();
-        if (demoStudio) { navigate("/dashboard", { replace: true }); return; }
-      }
-      if (roles.includes("parent") && !roles.includes("admin") && !ownedStudio) { navigate("/parent", { replace: true }); return; }
-      if (!ownedStudio) { navigate("/onboarding", { replace: true }); return; }
-      navigate("/dashboard", { replace: true });
+      const isAdmin = roles.includes("admin");
+      const isParentOnly = roles.includes("parent") && !isAdmin && !ownedStudio;
+
+      // Parent-only users → parent portal
+      if (isParentOnly) { navigate("/parent", { replace: true }); return; }
+
+      // Has admin role OR owns a studio → dashboard
+      if (isAdmin || ownedStudio) { navigate("/dashboard", { replace: true }); return; }
+
+      // Truly new user with no studio and no role → onboarding
+      navigate("/onboarding", { replace: true });
     })();
   }, [user, loading, navigate]);
 
