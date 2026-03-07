@@ -240,10 +240,11 @@ function ParentsTab({ parents }: { parents: ParentRow[] }) {
                     <StudentList students={p.students} />
                   </div>
                 </div>
-                <div className="shrink-0">
+                <div className="shrink-0 flex flex-col items-end gap-2">
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
                     {p.student_count} student{p.student_count !== 1 ? "s" : ""}
                   </Badge>
+                  <ImpersonateButton userId={p.user_id} name={p.full_name} />
                 </div>
               </div>
             </CardContent>
