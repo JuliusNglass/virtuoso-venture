@@ -627,6 +627,110 @@ export default function SalesPage() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="mb-3 text-3xl font-bold">How it works</h2>
+          <p className="mb-12 text-muted-foreground">Three steps. That's really it.</p>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {[
+              { step: "1", icon: PenLine, title: "Teacher logs the lesson", desc: "Notes, homework, pieces, and attendance in under a minute — right after the session." },
+              { step: "2", icon: Bell, title: "Parent gets notified", desc: "An instant recap lands in their inbox. They see exactly what was covered and what to practise." },
+              { step: "3", icon: ArrowUp, title: "Student sees progress", desc: "Every lesson builds a history. Students and parents watch the journey unfold over time." },
+            ].map(({ step, icon: Icon, title, desc }) => (
+              <div key={step} className="relative rounded-xl border bg-card p-6 shadow-sm">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                    {step}
+                  </div>
+                  <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="mb-2 font-semibold text-left">{title}</h3>
+                <p className="text-sm text-muted-foreground text-left">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Founder's Rate */}
+      <section id="founder" className="px-6 py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="mx-auto max-w-2xl">
+          <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-xl overflow-hidden">
+            {/* Badge header */}
+            <div className="bg-primary px-8 py-4 text-center">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary-foreground/80 mb-1">Limited spots available</p>
+              <h2 className="text-2xl font-bold text-primary-foreground">🔒 Become a Founding Member</h2>
+            </div>
+            <div className="px-8 py-8">
+              <p className="text-center text-muted-foreground mb-8">
+                I'm sharing Conservo with a small group of trusted teachers for honest feedback. If you join now and love it, you'll be locked in at a <span className="font-semibold text-foreground">Founder's Rate — discounted for life</span> — before we open to the public.
+              </p>
+
+              {/* 3-step deal */}
+              <div className="grid sm:grid-cols-3 gap-4 mb-8">
+                {[
+                  { icon: "🎯", label: "Try it free", desc: "No credit card. Get full access and explore everything." },
+                  { icon: "💬", label: "Share feedback", desc: "Tell me what works, what doesn't, what you'd love to see." },
+                  { icon: "🔒", label: "Lock in your rate", desc: "A founder's discount — yours for life, before public pricing kicks in." },
+                ].map(({ icon, label, desc }) => (
+                  <div key={label} className="rounded-xl border bg-muted/30 p-4 text-center">
+                    <div className="text-2xl mb-2">{icon}</div>
+                    <p className="text-sm font-semibold mb-1">{label}</p>
+                    <p className="text-xs text-muted-foreground">{desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {founderSubmitted ? (
+                <div className="rounded-xl border bg-primary/5 p-8 text-center">
+                  <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-primary" />
+                  <h3 className="mb-1 text-lg font-bold">Welcome aboard, Founding Member! 🎉</h3>
+                  <p className="text-sm text-muted-foreground">
+                    You're in. I'll be in touch soon with your early access details and Founder's Rate information.
+                  </p>
+                </div>
+              ) : (
+                <Form {...founderForm}>
+                  <form onSubmit={founderForm.handleSubmit(onFounderSubmit)} className="space-y-4">
+                    <FormField
+                      control={founderForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input placeholder="Your name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={founderForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input type="email" placeholder="Your email address" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full py-5 text-base font-semibold shadow-md" disabled={founderLoading}>
+                      {founderLoading ? "Submitting…" : "Claim My Founder's Rate →"}
+                    </Button>
+                    <p className="text-center text-xs text-muted-foreground">
+                      No credit card. No commitment. Your rate is locked in when you start.
+                    </p>
+                  </form>
+                </Form>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Founder story */}
       <section className="bg-primary/5 px-6 py-16">
         <div className="mx-auto max-w-2xl text-center">
