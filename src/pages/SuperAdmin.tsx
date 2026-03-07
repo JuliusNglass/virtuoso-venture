@@ -69,6 +69,48 @@ function StatCard({ label, value, icon: Icon, color, bg }: {
   );
 }
 
+/* ─── Impersonate Button ────────────────────────────────── */
+function ImpersonateButton({ userId, name }: { userId: string; name: string | null }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleImpersonate = async () => {
+    if (!confirm(`Impersonate "${name ?? userId}"? This will open a new tab signed in as them.`)) return;
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/impersonate-user`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session!.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed");
+      window.open(json.action_link, "_blank");
+      toast.success(`Impersonation link opened for ${name ?? json.email}`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to impersonate");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-7 text-xs gap-1 border-border/60 hover:border-primary/50 hover:text-primary"
+      onClick={handleImpersonate}
+      disabled={loading}
+    >
+      <LogIn size={11} />
+      {loading ? "…" : "Impersonate"}
+    </Button>
+  );
+}
+
 /* ─── Contact chip ──────────────────────────────────────── */
 function ContactChip({ icon: Icon, value, href }: { icon: any; value: string | null | undefined; href?: string }) {
   if (!value) return null;
