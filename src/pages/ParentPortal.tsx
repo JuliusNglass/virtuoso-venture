@@ -395,6 +395,31 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
                         </Button>
                       </a>
                     )}
+                    {student.status === "awaiting_payment" && (
+                      <div className="mt-3 rounded-xl border border-red-200/70 bg-red-50/50 p-3">
+                        <p className="text-xs font-semibold text-red-700 mb-2">⚠️ Payment outstanding</p>
+                        {(studioPaymentLinks?.payment_link_stripe || studioPaymentLinks?.payment_link_paystack) ? (
+                          <div className="flex flex-col gap-1.5">
+                            {studioPaymentLinks?.payment_link_stripe && (
+                              <a href={studioPaymentLinks.payment_link_stripe} target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" className="w-full bg-[#635BFF] hover:bg-[#635BFF]/90 text-white">
+                                  <CreditCard size={13} className="mr-2" /> Pay with Stripe
+                                </Button>
+                              </a>
+                            )}
+                            {studioPaymentLinks?.payment_link_paystack && (
+                              <a href={studioPaymentLinks.payment_link_paystack} target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" className="w-full bg-[#00C3F7] hover:bg-[#00C3F7]/90 text-white">
+                                  <CreditCard size={13} className="mr-2" /> Pay with Paystack
+                                </Button>
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-red-600">Please contact your teacher to arrange payment.</p>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
