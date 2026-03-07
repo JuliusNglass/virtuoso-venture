@@ -189,13 +189,14 @@ function TeachersTab({ teachers }: { teachers: TeacherRow[] }) {
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex flex-col items-end gap-2 shrink-0">
                   {t.created_at && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock size={10} />
                       {new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   )}
+                  <ImpersonateButton userId={t.user_id} name={t.full_name} />
                 </div>
               </div>
             </CardContent>
