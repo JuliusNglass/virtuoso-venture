@@ -1,0 +1,1 @@
+ALTER TABLE public.studios ADD COLUMN IF NOT EXISTS payment_link_stripe text, ADD COLUMN IF NOT EXISTS payment_link_paystack text;

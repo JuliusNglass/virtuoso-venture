@@ -1027,6 +1027,8 @@ export type Database = {
           is_demo: boolean
           name: string
           owner_user_id: string
+          payment_link_paystack: string | null
+          payment_link_stripe: string | null
           slug: string | null
           updated_at: string
         }
@@ -1036,6 +1038,8 @@ export type Database = {
           is_demo?: boolean
           name: string
           owner_user_id: string
+          payment_link_paystack?: string | null
+          payment_link_stripe?: string | null
           slug?: string | null
           updated_at?: string
         }
@@ -1045,6 +1049,8 @@ export type Database = {
           is_demo?: boolean
           name?: string
           owner_user_id?: string
+          payment_link_paystack?: string | null
+          payment_link_stripe?: string | null
           slug?: string | null
           updated_at?: string
         }
