@@ -32,23 +32,29 @@ const Auth = () => {
   const redirectAfterLogin = async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) { navigate("/dashboard"); return; }
+
     const [{ data: roleRows }, { data: ownedStudio }] = await Promise.all([
       supabase.from("user_roles").select("role, studio_id").eq("user_id", authUser.id),
       supabase.from("studios").select("id, is_demo").eq("owner_user_id", authUser.id).maybeSingle(),
     ]);
+
     const roles = roleRows?.map(r => r.role) ?? [];
-    // Check if any linked studio (owned OR via role) is a demo — always go to dashboard
-    const linkedStudioIds = (roleRows ?? []).map(r => r.studio_id).filter(Boolean) as string[];
-    if (ownedStudio?.is_demo) { navigate("/dashboard"); return; }
-    if (linkedStudioIds.length > 0) {
-      const { data: demoStudio } = await supabase
-        .from("studios").select("id, is_demo").in("id", linkedStudioIds).eq("is_demo", true).maybeSingle();
-      if (demoStudio) { navigate("/dashboard"); return; }
+    const isAdmin = roles.includes("admin");
+    const linkedStudioId = (roleRows ?? []).find(r => r.studio_id)?.studio_id as string | undefined;
+    const hasAnyStudio = !!ownedStudio || !!linkedStudioId;
+
+    // Parent-only → parent portal
+    if (roles.includes("parent") && !isAdmin && !hasAnyStudio) {
+      navigate("/parent"); return;
     }
-    // Parent-only accounts go to the parent portal
-    if (roles.includes("parent") && !roles.includes("admin") && !ownedStudio) { navigate("/parent"); return; }
-    if (!ownedStudio) { navigate("/onboarding"); return; }
-    navigate("/dashboard");
+
+    // Admin or has a studio → dashboard
+    if (isAdmin || hasAnyStudio) {
+      navigate("/dashboard"); return;
+    }
+
+    // Truly new user with no studio and no role → onboarding
+    navigate("/onboarding");
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
