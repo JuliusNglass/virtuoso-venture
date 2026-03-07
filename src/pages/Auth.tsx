@@ -12,11 +12,12 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PROJECT_ID   = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 
 const Auth = () => {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const [demoLoading, setDemoLoading] = useState<"teacher" | "parent" | null>(null);
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
