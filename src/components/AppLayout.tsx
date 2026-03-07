@@ -1,11 +1,14 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Music,
   FileText, UserPlus, LogOut, Bell, MessageCircle,
-  Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck,
+  Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck, UserX,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
