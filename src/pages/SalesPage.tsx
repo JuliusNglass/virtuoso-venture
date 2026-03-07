@@ -502,10 +502,9 @@ export default function SalesPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10 px-6 py-20 text-center">
+      {/* ── Hero ──────────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10 px-6 py-24 text-center">
         <div className="mx-auto max-w-3xl">
-          {/* Logo */}
           <div className="flex justify-center mb-6">
             <img src="/conservo-logo.png" alt="Conservo" className="w-20 h-20 rounded-2xl shadow-xl object-cover" />
           </div>
@@ -517,52 +516,68 @@ export default function SalesPage() {
             Stop drowning in admin.<br />
             <span className="text-primary">Start teaching more.</span>
           </h1>
-          <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
-            Conservo is the all-in-one studio management tool built by a classically trained musician who got tired of the chaos — works for piano, guitar, violin, voice, and more.
+          <p className="mx-auto mb-10 max-w-2xl text-xl text-muted-foreground leading-relaxed">
+            Conservo helps independent music teachers keep lesson notes, student progress, parent updates, and studio admin in one organised place — so teaching stops spilling into your evenings.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="px-8 py-6 text-base font-semibold shadow-lg" onClick={() => window.location.href = "/auth"}>
-              Start Your Free Studio →
+              Start Free Beta Access →
             </Button>
-            <a href="#waitlist">
+            <a href="#walkthrough">
               <Button size="lg" variant="outline" className="px-8 py-6 text-base">
-                Join Waitlist
+                See How It Works
               </Button>
             </a>
           </div>
+          <p className="mt-4 text-sm text-muted-foreground">No credit card. Limited founding member spots.</p>
         </div>
       </section>
 
-      {/* Guided Tour with voiceover — moved high for visibility */}
+      {/* ── Guided Tour ───────────────────────────────────────────────────────── */}
       <GuidedTour />
 
-      {/* Pain points */}
-      <section className="bg-muted/40 px-6 py-16">
+      {/* ── Pain / Recognition ────────────────────────────────────────────────── */}
+      <section className="bg-muted/40 px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-3 text-2xl font-bold">Sound familiar?</h2>
-          <p className="mb-8 text-muted-foreground">
-            If you're running a private studio, you know the feeling. The teaching is the easy part.
+          <h2 className="mb-4 text-3xl font-bold">Sound familiar?</h2>
+          <p className="mb-10 text-lg text-muted-foreground leading-relaxed">
+            If you run a private studio, you know the feeling. Not the teaching itself — the invisible admin that follows you home. The notes, the messages, the files, the progress tracking, the mental load of trying to remember everything for everyone.
           </p>
           <ul className="space-y-3 text-left">
             {painPoints.map((point) => (
               <li key={point} className="flex items-start gap-3 rounded-lg border bg-background px-5 py-4 shadow-sm">
-                <span className="mt-0.5 text-destructive font-bold">✕</span>
+                <span className="mt-0.5 text-destructive font-bold shrink-0">✕</span>
                 <span>{point}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-8 text-lg font-medium">
+          <p className="mt-10 text-xl font-semibold leading-snug">
             You became a teacher because you love music — not because you love spreadsheets.
           </p>
         </div>
       </section>
 
-      {/* Interactive mockup */}
-      <section className="px-6 py-20">
+      {/* ── Identity Reframe ──────────────────────────────────────────────────── */}
+      <section className="px-6 py-24">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="mb-6 text-3xl font-bold leading-snug sm:text-4xl">
+            You're not disorganised.<br />
+            <span className="text-primary">You're just running a studio without the right system.</span>
+          </h2>
+          <p className="text-xl text-muted-foreground leading-relaxed">
+            Most independent music teachers are carrying too much in their heads: lesson notes, student progress, parent communication, repertoire, scheduling, and files. Conservo brings those moving parts into one calm, simple system — so your studio feels easier to run and more professional to manage.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Demo / Walkthrough ────────────────────────────────────────────────── */}
+      <section id="walkthrough" className="bg-muted/30 px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <div className="mb-10 text-center">
-            <h2 className="mb-3 text-3xl font-bold">See it in action</h2>
-            <p className="text-muted-foreground">Click through the features below to explore what Conservo looks like.</p>
+            <h2 className="mb-3 text-3xl font-bold">See how Conservo gives you your evenings back</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Take a quick walkthrough of how Conservo helps you log lessons, track progress, organise music, and keep parents informed — without adding more work to your day.
+            </p>
           </div>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             {/* Tab buttons */}
@@ -583,21 +598,19 @@ export default function SalesPage() {
             </div>
 
             {/* Mockup window */}
-            <div className="flex-1 rounded-2xl border bg-muted/30 shadow-lg overflow-hidden">
-              {/* Fake browser chrome */}
+            <div className="flex-1 rounded-2xl border bg-background shadow-lg overflow-hidden">
               <div className="flex items-center gap-1.5 border-b bg-muted px-4 py-2.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
                 <span className="ml-3 flex-1 rounded bg-background px-3 py-1 text-[10px] text-muted-foreground">
-                  studiodesk.app / {activeTab}
+                  conservo.app / {activeTab}
                 </span>
               </div>
-              {/* Screen content */}
               <div className="p-4">
                 <div className="mb-3 flex items-center gap-2">
-                {activeScreen && (() => { const Icon = activeScreen.icon; return <Icon className="h-4 w-4 text-primary" />; })()}
-                <p className="text-sm font-semibold">{activeScreen?.label}</p>
+                  {activeScreen && (() => { const Icon = activeScreen.icon; return <Icon className="h-4 w-4 text-primary" />; })()}
+                  <p className="text-sm font-semibold">{activeScreen?.label}</p>
                 </div>
                 {activeScreen && <activeScreen.Component />}
               </div>
@@ -606,12 +619,14 @@ export default function SalesPage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="bg-muted/30 px-6 py-20">
+      {/* ── Features ──────────────────────────────────────────────────────────── */}
+      <section className="px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
-            <h2 className="mb-3 text-3xl font-bold">Everything your studio needs, in one place</h2>
-            <p className="text-muted-foreground">Conservo handles the admin so you can focus on the lesson.</p>
+            <h2 className="mb-3 text-3xl font-bold">The admin side of teaching, finally simplified</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Conservo helps you stay on top of the moving parts of studio life without relying on memory, scattered notes, or extra admin time.
+            </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map(({ icon: Icon, title, description }) => (
@@ -619,7 +634,7 @@ export default function SalesPage() {
                 <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="mb-2 font-semibold">{title}</h3>
+                <h3 className="mb-2 font-semibold leading-snug">{title}</h3>
                 <p className="text-sm text-muted-foreground">{description}</p>
               </div>
             ))}
@@ -627,25 +642,37 @@ export default function SalesPage() {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="px-6 py-16">
+      {/* ── How it works ──────────────────────────────────────────────────────── */}
+      <section className="bg-muted/40 px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="mb-3 text-3xl font-bold">How it works</h2>
-          <p className="mb-12 text-muted-foreground">Three steps. That's really it.</p>
+          <p className="mb-12 text-muted-foreground text-lg">Three simple steps to a calmer teaching workflow.</p>
           <div className="grid gap-6 sm:grid-cols-3">
             {[
-              { step: "1", icon: PenLine, title: "Teacher logs the lesson", desc: "Notes, homework, pieces, and attendance in under a minute — right after the session." },
-              { step: "2", icon: Bell, title: "Parent gets notified", desc: "An instant recap lands in their inbox. They see exactly what was covered and what to practise." },
-              { step: "3", icon: ArrowUp, title: "Student sees progress", desc: "Every lesson builds a history. Students and parents watch the journey unfold over time." },
+              {
+                step: "1", icon: PenLine,
+                title: "Log the lesson in under a minute",
+                desc: "Capture notes, homework, repertoire, and attendance while everything is still fresh.",
+              },
+              {
+                step: "2", icon: Bell,
+                title: "Keep parents informed automatically",
+                desc: "Parents can see what was covered and what to practise without you repeating yourself later.",
+              },
+              {
+                step: "3", icon: ArrowUp,
+                title: "Build a visible learning journey",
+                desc: "Students and parents can see progress over time, which improves clarity, consistency, and confidence.",
+              },
             ].map(({ step, icon: Icon, title, desc }) => (
               <div key={step} className="relative rounded-xl border bg-card p-6 shadow-sm">
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shrink-0">
                     {step}
                   </div>
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="mb-2 font-semibold text-left">{title}</h3>
+                <h3 className="mb-2 font-semibold text-left leading-snug">{title}</h3>
                 <p className="text-sm text-muted-foreground text-left">{desc}</p>
               </div>
             ))}
@@ -653,31 +680,55 @@ export default function SalesPage() {
         </div>
       </section>
 
-      {/* Founder's Rate */}
-      <section id="founder" className="px-6 py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+      {/* ── Founder story ─────────────────────────────────────────────────────── */}
+      <section className="px-6 py-24">
+        <div className="mx-auto max-w-2xl">
+          <div className="text-center mb-10">
+            <div className="mb-4 text-4xl">🎹</div>
+            <h2 className="text-3xl font-bold">Built by a musician who lived the chaos</h2>
+          </div>
+          <div className="rounded-2xl border bg-card p-8 shadow-sm space-y-5">
+            <p className="text-muted-foreground leading-relaxed">
+              I didn't build Conservo because I wanted to start a software company. I built it because after years of teaching, I was tired of running my studio through memory, messages, spreadsheets, and scattered files.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              The teaching itself was never the hard part. The hard part was everything around it: remembering what each student covered, keeping parents updated, tracking repertoire, finding sheet music, and trying to stay organised after a full day of lessons.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Conservo is the tool I wish I'd had years earlier — simple, calm, and built around how music teachers actually work.
+            </p>
+            <div className="border-t pt-5 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary shrink-0">J</div>
+              <p className="text-sm font-medium">Julius Nglass, classically trained musician & music teacher</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Founding Member CTA ───────────────────────────────────────────────── */}
+      <section id="founder" className="px-6 py-24 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl border-2 border-primary/30 bg-card shadow-xl overflow-hidden">
-            {/* Badge header */}
-            <div className="bg-primary px-8 py-4 text-center">
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary-foreground/80 mb-1">Limited spots available</p>
-              <h2 className="text-2xl font-bold text-primary-foreground">🔒 Become a Founding Member</h2>
+            <div className="bg-primary px-8 py-5 text-center">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary-foreground/70 mb-1">Limited spots available</p>
+              <h2 className="text-2xl font-bold text-primary-foreground">Join the first group of teachers shaping Conservo</h2>
             </div>
             <div className="px-8 py-8">
-              <p className="text-center text-muted-foreground mb-8">
-                I'm sharing Conservo with a small group of trusted teachers for honest feedback. If you join now and love it, you'll be locked in at a <span className="font-semibold text-foreground">Founder's Rate — discounted for life</span> — before we open to the public.
+              <p className="text-center text-muted-foreground mb-8 text-lg leading-relaxed">
+                Get full beta access, help shape the product with real feedback, and lock in a discounted founding member rate before public launch.
               </p>
 
-              {/* 3-step deal */}
-              <div className="grid sm:grid-cols-3 gap-4 mb-8">
+              {/* Benefit bullets */}
+              <div className="grid sm:grid-cols-2 gap-3 mb-8">
                 {[
-                  { icon: "🎯", label: "Try it free", desc: "No credit card. Get full access and explore everything." },
-                  { icon: "💬", label: "Share feedback", desc: "Tell me what works, what doesn't, what you'd love to see." },
-                  { icon: "🔒", label: "Lock in your rate", desc: "A founder's discount — yours for life, before public pricing kicks in." },
-                ].map(({ icon, label, desc }) => (
-                  <div key={label} className="rounded-xl border bg-muted/30 p-4 text-center">
-                    <div className="text-2xl mb-2">{icon}</div>
-                    <p className="text-sm font-semibold mb-1">{label}</p>
-                    <p className="text-xs text-muted-foreground">{desc}</p>
+                  { icon: CheckCircle2, label: "Full beta access" },
+                  { icon: CheckCircle2, label: "No credit card required" },
+                  { icon: CheckCircle2, label: "Direct input into the roadmap" },
+                  { icon: CheckCircle2, label: "Founding member pricing locked in" },
+                ].map(({ icon: Icon, label }) => (
+                  <div key={label} className="flex items-center gap-2.5 rounded-lg border bg-muted/30 px-4 py-3">
+                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-sm font-medium">{label}</span>
                   </div>
                 ))}
               </div>
@@ -687,7 +738,7 @@ export default function SalesPage() {
                   <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-primary" />
                   <h3 className="mb-1 text-lg font-bold">Welcome aboard, Founding Member! 🎉</h3>
                   <p className="text-sm text-muted-foreground">
-                    You're in. I'll be in touch soon with your early access details and Founder's Rate information.
+                    You're in. I'll be in touch soon with your early access details and founding member rate.
                   </p>
                 </div>
               ) : (
@@ -718,10 +769,10 @@ export default function SalesPage() {
                       )}
                     />
                     <Button type="submit" className="w-full py-5 text-base font-semibold shadow-md" disabled={founderLoading}>
-                      {founderLoading ? "Submitting…" : "Claim My Founder's Rate →"}
+                      {founderLoading ? "Submitting…" : "Claim Founding Member Access →"}
                     </Button>
                     <p className="text-center text-xs text-muted-foreground">
-                      No credit card. No commitment. Your rate is locked in when you start.
+                      No credit card. No commitment. Your founding rate is locked in when you start.
                     </p>
                   </form>
                 </Form>
@@ -731,74 +782,7 @@ export default function SalesPage() {
         </div>
       </section>
 
-      {/* Founder story */}
-      <section className="bg-primary/5 px-6 py-16">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="mb-6 text-4xl">🎹</div>
-          <blockquote className="text-lg font-medium leading-relaxed">
-            "I built this because I was spending my evenings on admin instead of music. After years of teaching, I finally created the tool I always needed — and now I want to make it available to every teacher who feels the same way."
-          </blockquote>
-          <p className="mt-4 text-sm text-muted-foreground">— Julius Nglass, classically trained musician & music teacher</p>
-        </div>
-      </section>
-
-      {/* Lead capture */}
-      <section id="waitlist" className="px-6 py-20">
-        <div className="mx-auto max-w-lg text-center">
-          {submitted ? (
-            <div className="rounded-2xl border bg-card p-10 shadow-md">
-              <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-primary" />
-              <h2 className="mb-2 text-2xl font-bold">You're on the list!</h2>
-              <p className="text-muted-foreground">
-                Thank you — we'll be in touch soon with early access details. Keep an eye on your inbox.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-2xl border bg-card p-8 shadow-md sm:p-10">
-              <h2 className="mb-2 text-2xl font-bold">Get early access</h2>
-              <p className="mb-8 text-muted-foreground">
-                Join the waitlist and be first to know when Conservo opens its doors. No spam, ever.
-              </p>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input placeholder="Your name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input type="email" placeholder="Your email address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full py-5 text-base font-semibold" disabled={loading}>
-                    {loading ? "Submitting…" : "Yes, I want early access →"}
-                  </Button>
-                </form>
-              </Form>
-              <p className="mt-4 text-xs text-muted-foreground">
-                No credit card. No commitment. Just early access.
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Footer */}
+      {/* ── Footer ────────────────────────────────────────────────────────────── */}
       <footer className="border-t px-6 py-8 text-center text-sm text-muted-foreground">
         <p>Conservo · Built by a musician, for musicians · Julius Nglass</p>
       </footer>
