@@ -480,6 +480,23 @@ export default function SalesPage() {
     }
   };
 
+  const onFounderSubmit = async (values: LeadForm) => {
+    setFounderLoading(true);
+    try {
+      const { error } = await supabase.from("leads").insert({
+        name: values.name,
+        email: values.email,
+        source: "founder",
+      });
+      if (error) throw error;
+      setFounderSubmitted(true);
+    } catch {
+      founderForm.setError("email", { message: "Something went wrong. Please try again." });
+    } finally {
+      setFounderLoading(false);
+    }
+  };
+
   const activeScreen = MOCKUP_TABS.find((t) => t.id === activeTab);
 
   return (
