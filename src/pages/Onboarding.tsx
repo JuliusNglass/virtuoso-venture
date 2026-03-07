@@ -24,7 +24,8 @@ const Onboarding = () => {
     if (studio || role === "admin") {
       navigate("/dashboard", { replace: true });
     }
-  }, [studio, studioLoading, role, authLoading, navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studio, studioLoading, role, authLoading]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
