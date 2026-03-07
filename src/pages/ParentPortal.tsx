@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import UpcomingLessons from "@/components/UpcomingLessons";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 
 type Tab = "home" | "homework" | "files" | "messages";
 
