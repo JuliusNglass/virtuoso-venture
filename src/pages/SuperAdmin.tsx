@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Building2, Users, GraduationCap, BookOpen,
   ShieldCheck, TrendingUp, Clock, BarChart3,
-  Mail, Phone, User, Search, ChevronDown, ChevronUp,
+  Mail, Phone, User, Search, ChevronDown, ChevronUp, LogIn,
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -64,6 +66,48 @@ function StatCard({ label, value, icon: Icon, color, bg }: {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/* ─── Impersonate Button ────────────────────────────────── */
+function ImpersonateButton({ userId, name }: { userId: string; name: string | null }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleImpersonate = async () => {
+    if (!confirm(`Impersonate "${name ?? userId}"? This will open a new tab signed in as them.`)) return;
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/impersonate-user`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session!.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed");
+      window.open(json.action_link, "_blank");
+      toast.success(`Impersonation link opened for ${name ?? json.email}`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to impersonate");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-7 text-xs gap-1 border-border/60 hover:border-primary/50 hover:text-primary"
+      onClick={handleImpersonate}
+      disabled={loading}
+    >
+      <LogIn size={11} />
+      {loading ? "…" : "Impersonate"}
+    </Button>
   );
 }
 
@@ -145,13 +189,14 @@ function TeachersTab({ teachers }: { teachers: TeacherRow[] }) {
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
+                <div className="flex flex-col items-end gap-2 shrink-0">
                   {t.created_at && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock size={10} />
                       {new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   )}
+                  <ImpersonateButton userId={t.user_id} name={t.full_name} />
                 </div>
               </div>
             </CardContent>
@@ -195,10 +240,11 @@ function ParentsTab({ parents }: { parents: ParentRow[] }) {
                     <StudentList students={p.students} />
                   </div>
                 </div>
-                <div className="shrink-0">
+                <div className="shrink-0 flex flex-col items-end gap-2">
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
                     {p.student_count} student{p.student_count !== 1 ? "s" : ""}
                   </Badge>
+                  <ImpersonateButton userId={p.user_id} name={p.full_name} />
                 </div>
               </div>
             </CardContent>
