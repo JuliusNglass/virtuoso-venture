@@ -49,6 +49,22 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
     enabled: !!user,
   });
 
+  // Fetch studio payment links for the student's studio
+  const { data: studioPaymentLinks } = useQuery({
+    queryKey: ["parent-studio-payment-links", students?.[0]?.studio_id],
+    queryFn: async () => {
+      const studioId = students?.[0]?.studio_id;
+      if (!studioId) return null;
+      const { data } = await supabase
+        .from("studios")
+        .select("payment_link_stripe, payment_link_paystack")
+        .eq("id", studioId)
+        .maybeSingle();
+      return data as any;
+    },
+    enabled: !!students && students.length > 0 && !!students[0]?.studio_id,
+  });
+
   // Auto-select first student
   useEffect(() => {
     if (students && students.length > 0 && !selectedStudentId) {
