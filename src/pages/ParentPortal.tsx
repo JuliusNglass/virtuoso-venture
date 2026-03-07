@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, LogOut, BookOpen, FileText, Download, Send,
   Inbox, Video, Music, Clock, Play, Square, Plus, ListChecks,
-  ChevronRight, MessageCircle, Home, FileIcon, Users
+  ChevronRight, MessageCircle, Home, FileIcon, Users, CreditCard
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
