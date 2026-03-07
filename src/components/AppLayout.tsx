@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Music,
   FileText, UserPlus, LogOut, Bell, MessageCircle,
-  Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck, UserX,
+  Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck,
 } from "lucide-react";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
 import { supabase } from "@/integrations/supabase/client";
