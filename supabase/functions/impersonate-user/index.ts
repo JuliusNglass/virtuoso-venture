@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     // Prevent impersonating self
     if (user_id === user.id) return new Response(JSON.stringify({ error: "Cannot impersonate yourself" }), { status: 400, headers: corsHeaders });
 
-    // Use service role to get user's email and generate magic link
+    // Use service role to get user's email + roles + studio info
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -43,6 +43,16 @@ Deno.serve(async (req) => {
     if (targetError || !targetUser?.user?.email) {
       return new Response(JSON.stringify({ error: "Target user not found" }), { status: 404, headers: corsHeaders });
     }
+
+    // Determine target user's role(s) and studio ownership
+    const [{ data: targetRoleRows }, { data: targetStudio }] = await Promise.all([
+      admin.from("user_roles").select("role").eq("user_id", user_id),
+      admin.from("studios").select("id").eq("owner_user_id", user_id).maybeSingle(),
+    ]);
+
+    const targetRoles = targetRoleRows?.map((r: any) => r.role) ?? [];
+    const isParent = targetRoles.includes("parent") && !targetRoles.includes("admin") && !targetStudio;
+    const targetRole = isParent ? "parent" : "teacher";
 
     const origin = req.headers.get("origin") || "https://virtuoso-venture.lovable.app";
 
@@ -59,6 +69,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       action_link: linkData.properties.action_link,
       email: targetUser.user.email,
+      target_role: targetRole,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: any) {
