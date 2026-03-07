@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Building2, Users, GraduationCap, BookOpen,
   ShieldCheck, TrendingUp, Clock, BarChart3,
-  Mail, Phone, User, Search, ChevronDown, ChevronUp,
+  Mail, Phone, User, Search, ChevronDown, ChevronUp, LogIn,
 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
