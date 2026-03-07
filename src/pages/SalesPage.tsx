@@ -22,20 +22,20 @@ const leadSchema = z.object({
 type LeadForm = z.infer<typeof leadSchema>;
 
 const features = [
-  { icon: BookOpen, title: "Every lesson logged in seconds", description: "Notes, homework, pieces covered — all in one place. No more scrambling before the next session." },
-  { icon: Users, title: "Parents stay in the loop", description: "A live portal so parents always know what was covered and what to practise. Zero extra work for you." },
-  { icon: FileText, title: "Sheet music, organised", description: "Upload and store scores so nothing gets lost between lessons. Access from anywhere." },
-  { icon: Calendar, title: "Student progress at a glance", description: "Track repertoire and progress over time. See exactly where each student is in their journey." },
-  { icon: Bell, title: "Lesson requests, handled", description: "New students come to you already organised. No more back-and-forth emails just to get started." },
-  { icon: Music, title: "Built by a musician, for musicians", description: "Not a tech company. A classically trained teacher who lived these exact problems. Works for piano, guitar, violin, voice — any instrument." },
+  { icon: BookOpen, title: "Every lesson captured before it slips away", description: "Notes, homework, and pieces covered — all logged while the lesson is still fresh." },
+  { icon: Users, title: "Parents stay informed without chasing you", description: "A parent portal keeps them updated on what was covered and what to practise, without extra back-and-forth." },
+  { icon: FileText, title: "Sheet music and files, where you can actually find them", description: "Store scores and lesson resources in one place so nothing gets buried between sessions." },
+  { icon: Calendar, title: "Student progress, visible at a glance", description: "Track repertoire, attendance, and development over time so each student's journey is easy to follow." },
+  { icon: Bell, title: "New lesson requests, handled cleanly", description: "Give new students a smoother, more organised start without messy email chains." },
+  { icon: Music, title: "Built by a musician who lived the problem", description: "Conservo was created by a classically trained musician and teacher who got tired of sticky notes, spreadsheets, and scattered studio admin." },
 ];
 
 const painPoints = [
-  "Chasing parents for updates at 10pm",
+  "Chasing parent replies late in the evening",
   "Forgetting what you covered last week",
-  "Losing track of repertoire across 20+ students",
+  "Losing track of repertoire across multiple students",
   "Spending evenings on admin instead of music",
-  "Parents who feel disconnected from their child's progress",
+  "Parents feeling out of the loop between lessons",
 ];
 
 // ─── Mockup screens ───────────────────────────────────────────────────────────
