@@ -72,10 +72,16 @@ function StatCard({ label, value, icon: Icon, color, bg }: {
 /* ─── Impersonate Button ────────────────────────────────── */
 function ImpersonateButton({ userId, name }: { userId: string; name: string | null }) {
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
-  const handleImpersonate = async () => {
-    if (!confirm(`Impersonate "${name ?? userId}"? This will open a new tab signed in as them.`)) return;
+  const handleClick = () => {
+    if (!confirming) { setConfirming(true); return; }
+    doImpersonate();
+  };
+
+  const doImpersonate = async () => {
     setLoading(true);
+    setConfirming(false);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${SUPABASE_URL}/functions/v1/impersonate-user`, {
@@ -89,7 +95,7 @@ function ImpersonateButton({ userId, name }: { userId: string; name: string | nu
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Failed");
       window.open(json.action_link, "_blank");
-      toast.success(`Impersonation link opened for ${name ?? json.email}`);
+      toast.success(`Opened new tab as ${name ?? json.email}`);
     } catch (e: any) {
       toast.error(e.message ?? "Failed to impersonate");
     } finally {
@@ -97,12 +103,26 @@ function ImpersonateButton({ userId, name }: { userId: string; name: string | nu
     }
   };
 
+  if (confirming) {
+    return (
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] text-muted-foreground">Sure?</span>
+        <Button size="sm" variant="destructive"
+          className="h-6 text-[10px] px-2"
+          onClick={doImpersonate}>Yes</Button>
+        <Button size="sm" variant="ghost"
+          className="h-6 text-[10px] px-2"
+          onClick={() => setConfirming(false)}>No</Button>
+      </div>
+    );
+  }
+
   return (
     <Button
       size="sm"
       variant="outline"
       className="h-7 text-xs gap-1 border-border/60 hover:border-primary/50 hover:text-primary"
-      onClick={handleImpersonate}
+      onClick={handleClick}
       disabled={loading}
     >
       <LogIn size={11} />
