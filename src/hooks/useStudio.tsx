@@ -34,14 +34,41 @@ export const StudioProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     setLoading(true);
-    const { data } = await supabase
+
+    // First try: studio owned by user
+    const { data: ownedStudio } = await supabase
       .from("studios")
       .select("*")
       .eq("owner_user_id", user.id)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    setStudio(data ?? null);
+
+    if (ownedStudio) {
+      setStudio(ownedStudio);
+      setLoading(false);
+      return;
+    }
+
+    // Fallback: studio linked via user_roles (e.g. demo/invited admin)
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("studio_id")
+      .eq("user_id", user.id)
+      .not("studio_id", "is", null)
+      .limit(1);
+
+    const studioId = roleRows?.[0]?.studio_id;
+    if (studioId) {
+      const { data: linkedStudio } = await supabase
+        .from("studios")
+        .select("*")
+        .eq("id", studioId)
+        .maybeSingle();
+      setStudio(linkedStudio ?? null);
+    } else {
+      setStudio(null);
+    }
     setLoading(false);
   };
 
