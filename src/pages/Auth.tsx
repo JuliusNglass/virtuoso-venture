@@ -18,9 +18,16 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState<"teacher" | "parent" | null>(null);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // If already logged in, skip straight to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const redirectAfterLogin = async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
