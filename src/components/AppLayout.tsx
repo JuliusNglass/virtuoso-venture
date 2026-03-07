@@ -45,6 +45,11 @@ const navItems = [
   { path: "/settings",   label: "Settings",        icon: Settings2 },
 ];
 
+// Items only visible to platform admin
+const adminOnlyItems = [
+  { path: "/superadmin", label: "Platform Admin", icon: ShieldCheck },
+];
+
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
