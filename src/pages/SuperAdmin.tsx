@@ -74,31 +74,47 @@ function ImpersonateButton({ userId, name }: { userId: string; name: string | nu
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  const handleClick = () => {
-    if (!confirming) { setConfirming(true); return; }
-    doImpersonate();
-  };
-
   const doImpersonate = async () => {
     setLoading(true);
     setConfirming(false);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session: adminSession } } = await supabase.auth.getSession();
+      if (!adminSession) throw new Error("Not authenticated");
+
+      // Save admin session so we can restore it later
+      localStorage.setItem("impersonation_admin_session", JSON.stringify({
+        access_token: adminSession.access_token,
+        refresh_token: adminSession.refresh_token,
+      }));
+
       const res = await fetch(`${SUPABASE_URL}/functions/v1/impersonate-user`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${session!.access_token}`,
+          Authorization: `Bearer ${adminSession.access_token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ user_id: userId }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Failed");
-      window.open(json.action_link, "_blank");
-      toast.success(`Opened new tab as ${name ?? json.email}`);
+
+      // Extract token_hash from the magic link URL and sign in as target user
+      const url = new URL(json.action_link);
+      const tokenHash = url.searchParams.get("token");
+      const type = (url.searchParams.get("type") ?? "magiclink") as "magiclink";
+
+      if (!tokenHash) throw new Error("Could not extract token from link");
+
+      const { error: otpError } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (otpError) throw new Error(otpError.message);
+
+      toast.success(`Now acting as ${name ?? json.email}`);
+      // Navigate to dashboard as the impersonated user
+      window.location.href = "/today";
     } catch (e: any) {
+      // Clean up saved session if we failed
+      localStorage.removeItem("impersonation_admin_session");
       toast.error(e.message ?? "Failed to impersonate");
-    } finally {
       setLoading(false);
     }
   };
@@ -122,11 +138,11 @@ function ImpersonateButton({ userId, name }: { userId: string; name: string | nu
       size="sm"
       variant="outline"
       className="h-7 text-xs gap-1 border-border/60 hover:border-primary/50 hover:text-primary"
-      onClick={handleClick}
+      onClick={() => setConfirming(true)}
       disabled={loading}
     >
       <LogIn size={11} />
-      {loading ? "…" : "Impersonate"}
+      {loading ? "Signing in…" : "Impersonate"}
     </Button>
   );
 }

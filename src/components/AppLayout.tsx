@@ -1,13 +1,16 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Music,
   FileText, UserPlus, LogOut, Bell, MessageCircle,
-  Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck,
+  Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck, UserX,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +30,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 
 const navItems = [
   { path: "/today",      label: "Today",           icon: Sun },
@@ -217,34 +219,89 @@ const AppSidebar = () => {
   );
 };
 
+/* ─── Impersonation Banner ───────────────────────────────── */
+const ImpersonationBanner = () => {
+  const { user } = useAuth();
+  const [adminSession, setAdminSession] = useState<{ access_token: string; refresh_token: string } | null>(null);
+  const [exiting, setExiting] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("impersonation_admin_session");
+    if (stored) {
+      try { setAdminSession(JSON.parse(stored)); } catch { /* ignore */ }
+    }
+  }, [user]);
+
+  if (!adminSession) return null;
+
+  const handleExit = async () => {
+    setExiting(true);
+    try {
+      await supabase.auth.setSession({
+        access_token: adminSession.access_token,
+        refresh_token: adminSession.refresh_token,
+      });
+      localStorage.removeItem("impersonation_admin_session");
+      toast.success("Returned to super admin account");
+      window.location.href = "/superadmin";
+    } catch {
+      toast.error("Failed to exit impersonation");
+      setExiting(false);
+    }
+  };
+
+  return (
+    <div className="sticky top-0 z-50 flex items-center justify-between gap-3 px-4 py-2 bg-destructive text-destructive-foreground text-sm font-medium">
+      <div className="flex items-center gap-2">
+        <UserX size={15} />
+        <span>
+          You are impersonating <strong>{user?.email}</strong> — all actions are real.
+        </span>
+      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 text-xs border-destructive-foreground/40 text-destructive-foreground hover:bg-destructive-foreground/10 hover:text-destructive-foreground"
+        onClick={handleExit}
+        disabled={exiting}
+      >
+        {exiting ? "Exiting…" : "Exit Impersonation"}
+      </Button>
+    </div>
+  );
+};
+
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
+      <div className="min-h-screen flex flex-col w-full bg-background">
+        <ImpersonationBanner />
+        <div className="flex flex-1 min-h-0 w-full">
+          <AppSidebar />
 
-        {/* Main area — always full width since sidebar is offcanvas */}
-        <div className="flex-1 flex flex-col min-w-0 w-full">
+          {/* Main area — always full width since sidebar is offcanvas */}
+          <div className="flex-1 flex flex-col min-w-0 w-full">
 
-          {/* Top bar */}
-          <header
-            className="sticky top-0 z-40 flex items-center gap-3 h-14 px-4 border-b border-border/60"
-            style={{ background: "hsl(var(--card) / 0.92)", backdropFilter: "blur(16px)" }}
-          >
-            {/* Always-visible toggle */}
-            <SidebarTrigger className="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0" />
+            {/* Top bar */}
+            <header
+              className="sticky top-0 z-40 flex items-center gap-3 h-14 px-4 border-b border-border/60"
+              style={{ background: "hsl(var(--card) / 0.92)", backdropFilter: "blur(16px)" }}
+            >
+              {/* Always-visible toggle */}
+              <SidebarTrigger className="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0" />
 
-            <div className="flex-1" />
+              <div className="flex-1" />
 
-            <Button variant="ghost" size="icon" className="w-9 h-9 rounded-xl">
-              <Bell size={17} />
-            </Button>
-          </header>
+              <Button variant="ghost" size="icon" className="w-9 h-9 rounded-xl">
+                <Bell size={17} />
+              </Button>
+            </header>
 
-          {/* Page content */}
-          <main className="flex-1 px-4 sm:px-6 py-6 lg:py-8">
-            {children}
-          </main>
+            {/* Page content */}
+            <main className="flex-1 px-4 sm:px-6 py-6 lg:py-8">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
