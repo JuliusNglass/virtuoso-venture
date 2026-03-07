@@ -81,12 +81,6 @@ function ImpersonateButton({ userId, name }: { userId: string; name: string | nu
       const { data: { session: adminSession } } = await supabase.auth.getSession();
       if (!adminSession) throw new Error("Not authenticated");
 
-      // Save admin session so we can restore it later
-      localStorage.setItem("impersonation_admin_session", JSON.stringify({
-        access_token: adminSession.access_token,
-        refresh_token: adminSession.refresh_token,
-      }));
-
       const res = await fetch(`${SUPABASE_URL}/functions/v1/impersonate-user`, {
         method: "POST",
         headers: {
@@ -97,6 +91,12 @@ function ImpersonateButton({ userId, name }: { userId: string; name: string | nu
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Failed");
+
+      // Save admin session AFTER successful edge function call
+      localStorage.setItem("impersonation_admin_session", JSON.stringify({
+        access_token: adminSession.access_token,
+        refresh_token: adminSession.refresh_token,
+      }));
 
       // Extract token_hash from the magic link URL and sign in as target user
       const url = new URL(json.action_link);
@@ -109,10 +109,11 @@ function ImpersonateButton({ userId, name }: { userId: string; name: string | nu
       if (otpError) throw new Error(otpError.message);
 
       toast.success(`Now acting as ${name ?? json.email}`);
-      // Navigate to dashboard as the impersonated user
-      window.location.href = "/today";
+
+      // Redirect based on the target user's role
+      const targetRole: string = json.target_role ?? "teacher";
+      window.location.href = targetRole === "parent" ? "/parent" : "/today";
     } catch (e: any) {
-      // Clean up saved session if we failed
       localStorage.removeItem("impersonation_admin_session");
       toast.error(e.message ?? "Failed to impersonate");
       setLoading(false);
