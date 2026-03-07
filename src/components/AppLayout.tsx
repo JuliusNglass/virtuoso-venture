@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Music,
   FileText, UserPlus, LogOut, Bell, MessageCircle,
-  Sun, CreditCard, Settings2, GraduationCap, Users2,
+  Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
@@ -45,10 +45,15 @@ const navItems = [
   { path: "/settings",   label: "Settings",        icon: Settings2 },
 ];
 
+// Items only visible to platform admin
+const adminOnlyItems = [
+  { path: "/superadmin", label: "Platform Admin", icon: ShieldCheck },
+];
+
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, role } = useAuth();
   const { studio } = useStudio();
   const { setOpen, setOpenMobile, isMobile } = useSidebar();
 
@@ -103,7 +108,7 @@ const AppSidebar = () => {
       </SidebarHeader>
 
       {/* Nav */}
-      <SidebarContent className="px-3 py-3">
+      <SidebarContent className="px-3 py-3 flex flex-col gap-4">
         <SidebarMenu className="space-y-0.5">
           {navItems.map(({ path, label, icon: Icon, badgeKey }) => {
             const isActive = location.pathname === path;
@@ -137,6 +142,40 @@ const AppSidebar = () => {
             );
           })}
         </SidebarMenu>
+
+        {/* Platform Admin section — only for admin role */}
+        {role === "admin" && (
+          <div>
+            <p className="text-[10px] font-semibold text-sidebar-foreground/30 uppercase tracking-widest px-3 mb-1">
+              Platform
+            </p>
+            <SidebarMenu className="space-y-0.5">
+              {adminOnlyItems.map(({ path, label, icon: Icon }) => {
+                const isActive = location.pathname === path;
+                return (
+                  <SidebarMenuItem key={path}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className={`
+                        w-full rounded-xl transition-all duration-150
+                        ${isActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
+                          : "text-sidebar-foreground/40 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                        }
+                      `}
+                    >
+                      <Link to={path} onClick={closeSidebar} className="flex items-center gap-3 px-3 py-2.5">
+                        <Icon size={18} />
+                        <span className="text-sm">{label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </div>
+        )}
       </SidebarContent>
 
       {/* Footer — user profile */}

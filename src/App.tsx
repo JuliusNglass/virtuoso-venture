@@ -17,6 +17,7 @@ import ParentPortal from "./pages/ParentPortal";
 import LessonRequest from "./pages/LessonRequest";
 import AdminRequests from "./pages/AdminRequests";
 import Signups from "./pages/Signups";
+import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import Messages from "./pages/Messages";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/request-lesson" element={<LessonRequest />} />
               <Route path="/requests" element={<AppLayout><AdminRequests /></AppLayout>} />
               <Route path="/signups" element={<AppLayout><Signups /></AppLayout>} />
+              <Route path="/superadmin" element={<AppLayout><SuperAdmin /></AppLayout>} />
               <Route path="/today" element={<AppLayout><Today /></AppLayout>} />
               <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
               <Route path="/students" element={<AppLayout><Students /></AppLayout>} />
