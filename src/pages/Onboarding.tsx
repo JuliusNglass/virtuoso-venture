@@ -11,19 +11,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Music, Sparkles, ArrowRight } from "lucide-react";
 
 const Onboarding = () => {
-  const { user } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const { studio, loading: studioLoading, refetch } = useStudio();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [studioName, setStudioName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // If studio already exists, go straight to dashboard
+  // If user already has a studio (owned or via role), skip onboarding
   useEffect(() => {
-    if (!studioLoading && studio) {
+    if (authLoading || studioLoading) return;
+    if (studio || role === "admin") {
       navigate("/dashboard", { replace: true });
     }
-  }, [studio, studioLoading, navigate]);
+  }, [studio, studioLoading, role, authLoading, navigate]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
