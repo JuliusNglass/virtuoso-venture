@@ -5,13 +5,12 @@ import {
   FileText, UserPlus, LogOut, Bell, MessageCircle,
   Sun, CreditCard, Settings2, GraduationCap, Users2, ShieldCheck,
 } from "lucide-react";
-import ImpersonationBanner from "@/components/ImpersonationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 import {
   DropdownMenu,
   DropdownMenuContent,
