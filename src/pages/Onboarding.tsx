@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudio } from "@/hooks/useStudio";
@@ -12,11 +12,18 @@ import { Music, Sparkles, ArrowRight } from "lucide-react";
 
 const Onboarding = () => {
   const { user } = useAuth();
-  const { refetch } = useStudio();
+  const { studio, loading: studioLoading, refetch } = useStudio();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [studioName, setStudioName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // If studio already exists, go straight to dashboard
+  useEffect(() => {
+    if (!studioLoading && studio) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [studio, studioLoading, navigate]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
