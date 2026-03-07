@@ -30,6 +30,7 @@ import SessionMode from "./pages/SessionMode";
 import AppLayout from "./components/AppLayout";
 import VersionChecker from "./components/VersionChecker";
 import PWAUpdateToast from "./components/PWAUpdateToast";
+import SalesPage from "./pages/SalesPage";
 
 const queryClient = new QueryClient();
 
