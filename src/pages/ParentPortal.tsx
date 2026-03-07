@@ -310,6 +310,7 @@ const ParentPortal = ({ initialTab }: ParentPortalProps) => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <ImpersonationBanner />
       {/* Header */}
       <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md border-b border-border px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
