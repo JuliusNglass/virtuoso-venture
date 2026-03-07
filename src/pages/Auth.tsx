@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const PROJECT_ID   = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 
 const Auth = () => {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const [demoLoading, setDemoLoading] = useState<"teacher" | "parent" | null>(null);
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -55,6 +56,20 @@ const Auth = () => {
 
     // Truly new user with no studio and no role → onboarding
     navigate("/onboarding");
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setIsLoading(false);
+    if (error) {
+      toast({ title: "Failed to send reset email", description: error.message, variant: "destructive" });
+      return;
+    }
+    setForgotSent(true);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -164,7 +179,51 @@ const Auth = () => {
 
           {/* Form */}
           <div className="p-6">
-            {mode === "signin" ? (
+            {mode === "forgot" ? (
+              forgotSent ? (
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <CheckCircle2 className="text-emerald-500" size={36} />
+                  <p className="font-semibold text-foreground text-center">Check your email</p>
+                  <p className="text-sm text-muted-foreground text-center">
+                    We've sent a password reset link to <strong>{email}</strong>.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setMode("signin"); setForgotSent(false); }}
+                    className="text-sm text-gold hover:underline mt-2"
+                  >
+                    ← Back to Sign In
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <p className="text-sm text-muted-foreground">Enter your email and we'll send you a reset link.</p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="forgot-email" className="text-sm font-semibold">Email</Label>
+                    <Input
+                      id="forgot-email" type="email" value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@musicstudio.com" required maxLength={255}
+                      className="h-11 rounded-xl border-border/60 focus:border-gold focus:ring-gold/20"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full h-11 bg-gradient-gold text-charcoal hover:opacity-90 shadow-gold font-bold text-sm rounded-xl mt-2"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Send Reset Link →"}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("signin")}
+                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    ← Back to Sign In
+                  </button>
+                </form>
+              )
+            ) : mode === "signin" ? (
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="signin-email" className="text-sm font-semibold">Email</Label>
@@ -176,7 +235,16 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="signin-password" className="text-sm font-semibold">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="signin-password" className="text-sm font-semibold">Password</Label>
+                    <button
+                      type="button"
+                      onClick={() => setMode("forgot")}
+                      className="text-xs text-gold hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <Input
                     id="signin-password" type="password" value={password}
                     onChange={e => setPassword(e.target.value)}

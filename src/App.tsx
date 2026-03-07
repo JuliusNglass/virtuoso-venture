@@ -31,6 +31,7 @@ import AppLayout from "./components/AppLayout";
 import VersionChecker from "./components/VersionChecker";
 import PWAUpdateToast from "./components/PWAUpdateToast";
 import SalesPage from "./pages/SalesPage";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/sales" element={<SalesPage />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/parent" element={<ParentPortal />} />
