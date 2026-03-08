@@ -19,13 +19,25 @@ const Onboarding = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // If user already has a studio (owned or via role), skip onboarding
+  // Also do a direct DB check to catch cases where context is stale
   useEffect(() => {
-    if (authLoading || studioLoading) return;
-    if (studio || role === "admin") {
-      navigate("/dashboard", { replace: true });
-    }
+    if (authLoading || !user) return;
+
+    const checkAndRedirect = async () => {
+      // Quick direct check — don't rely solely on context which may be mid-fetch
+      const [{ data: ownedStudio }, { data: roleRows }] = await Promise.all([
+        supabase.from("studios").select("id").eq("owner_user_id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
+      ]);
+      const roles = roleRows?.map(r => r.role) ?? [];
+      if (ownedStudio || roles.includes("admin")) {
+        navigate("/dashboard", { replace: true });
+      }
+    };
+
+    checkAndRedirect();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studio, studioLoading, role, authLoading]);
+  }, [user?.id, authLoading]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
